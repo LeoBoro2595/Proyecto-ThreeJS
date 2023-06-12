@@ -3,6 +3,8 @@ import "./App.css";
 import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+
 
 let scene, camera, renderer, cube, controls;
 
@@ -16,10 +18,12 @@ class App extends Component {
   init() {
     // Creating scene
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xFFFFFF);
+    scene.background = new THREE.Color(0x000000);
 
     // Add camera
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight);
+    camera.position.z = 20;
+    camera.position.y = 5;
 
     // Screen renderer
     renderer = new THREE.WebGLRenderer({ canvas: this.canvasRef.current });
@@ -36,15 +40,11 @@ class App extends Component {
 
     // Add geometry
     var geometry = new THREE.BoxGeometry();
-    var material = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-      wireframe: false,
-    });
+    var material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: false, });
     cube = new THREE.Mesh(geometry, material);
     scene.add(cube);
 
-    camera.position.z = 20;
-    camera.position.y = 5;
+
 
     // OrbitControls
     controls = new OrbitControls(camera, renderer.domElement);
