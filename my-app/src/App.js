@@ -1,44 +1,40 @@
 import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
-import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { FirstPersonControls } from "./FirstPersonControls.js";
-// import { OrbitControls} from "./Movement/orbitcontrols.js";
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 
-
-
-let scene, camera, renderer, cube;
+let scene, camera, renderer, cube, controls;
 
 class App extends Component {
   constructor(props) {
     super(props);
+    this.canvasRef = React.createRef();
     this.animate = this.animate.bind(this);
   }
 
   init() {
-    //Creating scene
+    // Creating scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xFFFFFF);
 
-    //Add camera
+    // Add camera
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight);
 
-    //Screen renderer
-    renderer = new THREE.WebGLRenderer();
+    // Screen renderer
+    renderer = new THREE.WebGLRenderer({ canvas: this.canvasRef.current });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-    
-    
-    // controls = new THREE.TrackballControls( camera );
-    // controls.target.set( 0, 0, 0 );
-
-
-
-    //Add Grid
+    // Add Grid
     var grid = new THREE.GridHelper(100, 50);
     scene.add(grid);
 
-    //Add geometry
+    // Add geometry
     var geometry = new THREE.BoxGeometry();
     var material = new THREE.MeshBasicMaterial({
       color: 0xff0000,
@@ -50,33 +46,28 @@ class App extends Component {
     camera.position.z = 20;
     camera.position.y = 5;
 
+    // OrbitControls
+    controls = new OrbitControls(camera, renderer.domElement);
+
+    // controls = new FirstPersonControls (camera, renderer.domElement);
+
     return renderer.domElement;
-
-
-
-    // MOVIMIENTOS DE LA CÁMARA
-
-    // const controls = new OrbitsControls(camera, renderer.domElement);
-
   }
 
-
-
-
-
-  //Renderizado de pantalla
+  // Renderizado de pantalla
   animate() {
     requestAnimationFrame(this.animate);
     renderer.render(scene, camera);
+    controls.update(); // Actualiza los controles de la cámara
   }
 
   componentDidMount() {
-    document.getElementById("Render").appendChild(this.init());
+    const renderElement = this.init();
     this.animate();
   }
 
   render() {
-    return <div id="Render" className="App"></div>;
+    return <canvas ref={this.canvasRef} className="App" />;
   }
 }
 
