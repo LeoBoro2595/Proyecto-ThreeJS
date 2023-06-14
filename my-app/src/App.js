@@ -4,9 +4,10 @@ import * as THREE from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
-let scene, camera, renderer, cube, wall, lightHelper, controls;
+let scene, camera, renderer, cube, wall, controls;
 
 class App extends Component {
   constructor(props) {
@@ -39,29 +40,37 @@ class App extends Component {
     scene.add(grid);
 
 
-    
-    var light = new THREE.AmbientLight( 0xffffff );
-    scene.add( light );
-    light.position.set(1, 1, 1);
+    //Add Point Light    
+    var light = new THREE.PointLight( 0xffffff, 0.4);
+    scene.add(light);
+    light.position.set(1, 5, 8);
 
+
+    // Add GLTF Model
+    var loader = new GLTFLoader();
+
+    var obj;
+    loader.load("../models/camionetatest.gltf", function (gltf) {
+      obj = gltf.scene;
+      scene.add(gltf.scene);
+    })
 
     // Add geometry
     var geometry = new THREE.BoxGeometry(1, 1, 1);
     var material = new THREE.MeshStandardMaterial({ color: 0xff0000, wireframe: false, });
     cube = new THREE.Mesh(geometry, material);
-    cube.castShadow = true;
+    
     scene.add(cube);
     cube.position.y = 0.5;
 
 
-        // Add wall
-        var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
-        var wallmaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false, });
-        wall = new THREE.Mesh(wallgeometry, wallmaterial);
-        wall.castShadow = true;
-        scene.add(wall);
-        wall.position.z = -5;
-        wall.position.y = 2.5;       
+    // Add wall
+    var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
+    var wallmaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe: false, });
+    wall = new THREE.Mesh(wallgeometry, wallmaterial);
+    scene.add(wall);
+    wall.position.z = -5;
+    wall.position.y = 2.5;       
 
 
     // OrbitControls
@@ -69,6 +78,8 @@ class App extends Component {
 
     // controls = new FirstPersonControls (camera, renderer.domElement);
 
+
+    
     return renderer.domElement;
   }
 
