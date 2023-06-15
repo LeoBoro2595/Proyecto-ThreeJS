@@ -87,7 +87,7 @@ class App extends Component {
 
     // Add wall
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
-    var wallmaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe: false });
+    var wallmaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
     wall = new THREE.Mesh(wallgeometry, wallmaterial);
     scene.add(wall);
     wall.position.z = -5;
@@ -144,7 +144,7 @@ class App extends Component {
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>
         <i className="fa-solid fa-xmark" id="crossClose" onClick={this.closePopup}></i>
 
-        <video src="#" id="videoDiv" controls></video>
+        <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
 
           <p id="UItext">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
@@ -152,7 +152,9 @@ class App extends Component {
           Distinctio, labore.
           </p>
           
-          <p className="creditosProyecto"></p>
+          <audio controls src="#"></audio>
+
+          <p className="creditosProyecto">Text</p>
 
         </div>
       </div>

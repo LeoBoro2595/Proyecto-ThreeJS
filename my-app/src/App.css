@@ -61,3 +61,11 @@ body {
   position: relative;
   margin-left: 10px;
 }
+
+#creditosProyecto > p {
+  display: inline-block;
+  position: relative;
+  border: 2px solid black;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  margin-bottom: 30px;
+}
