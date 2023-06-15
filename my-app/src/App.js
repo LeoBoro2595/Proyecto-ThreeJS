@@ -99,15 +99,13 @@ class App extends Component {
 
 
     // Add popup geometry
-    var geometrypopup = new THREE.RingGeometry(1, 2, 32);
-    var materialpopup = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: false, emissive: 0xffffff, shininess: 100 });
+    var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
+    var materialpopup = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true, emissive: 0xffffff, shininess: 100 });
     popup = new THREE.Mesh(geometrypopup, materialpopup);
     popup.castShadow = false;
     scene.add(popup);
     popup.position.y = 0.5;
     popup.position.x = 5;
-
-    popup.rotation.x = 30;
   }
 
   animate() {
@@ -146,7 +144,7 @@ class App extends Component {
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>
         <i className="fa-solid fa-xmark" id="crossClose" onClick={this.closePopup}></i>
 
-        <video src="https://www.youtube.com/watch?v=85qbNFHshdY&list=RDGMEM2VCIgaiSqOfVzBAjPJm-ag&start_radio=1" id="videoDiv" controls></video>
+        <video src="#" id="videoDiv" controls></video>
 
           <p id="UItext">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
