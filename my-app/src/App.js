@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-let scene, camera, renderer, cube, wall, controls, popup, closePopup;
+let scene, camera, renderer, cube, wall, controls, popup;
 
 class App extends Component {
   constructor(props) {
@@ -14,12 +14,12 @@ class App extends Component {
     this.canvasRef = React.createRef();
     this.popupRef = React.createRef();
     this.animate = this.animate.bind(this);
-    this.onCanvasClick = this.onCanvasClick.bind(this);
+    this.onCanvasClick = this.onCanvasClick.bind(this); //Referenciar al clickear en la posición determinada en el canvas
     this.closePopup = this.closePopup.bind(this);
   }
 
   closePopup() {
-    this.popupRef.current.style.display = "none";
+    this.popupRef.current.style.display = "none"; //Ocultar elemento "popup" del HTML modificando su display con el fin de no tener una posición exacta en la pantalla.
   }
 
   componentDidMount() {
@@ -120,25 +120,26 @@ class App extends Component {
   }
 
   onCanvasClick(event) {
-    const rect = this.canvasRef.current.getBoundingClientRect();
+    const rect = this.canvasRef.current.getBoundingClientRect(); //Calcular coordenadas del mouse en el canvas
     const mouse = {
       x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
       y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
     };
 
+    //Creo un raycaster, librería de three,js para poder interactuar con un objeto 3D en una escena.
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, camera); //Posiciona el raycaster en la ubicación de la cámara para interactuar de manera correcta desde la vista del usuario
 
-    const intersects = raycaster.intersectObject(popup);
+    const intersects = raycaster.intersectObject(popup); //Comprueba si el "rayo" generado por el raycaster, intercepta un objeto 3D en la escena.
 
-    if (intersects.length > 0) {
+    if (intersects.length > 0) { //Verifica si el mouse fue presionado encima de la posición del objeto
       this.showPopup();
     }
   }
 
   showPopup() {
-    const popup = this.popupRef.current;
-    popup.style.display = "block";
+    const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
+    popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
   }
 
 
@@ -146,8 +147,8 @@ class App extends Component {
     return (
       <div>
         <canvas ref={this.canvasRef} className="App" />
-        <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>
-        <i className="fa-solid fa-xmark" id="crossClose" onClick={this.closePopup}></i>
+        <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
+        <i className="fa-solid fa-xmark" id="crossClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
 
         <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
 
