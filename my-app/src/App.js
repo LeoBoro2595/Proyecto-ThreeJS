@@ -4,7 +4,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 // import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
-// import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
 
 let scene, camera, renderer, cube, wall, controls, popup;
 
@@ -87,6 +88,31 @@ class App extends Component {
     cube.position.y = 0.5;
     cube.name = "positionTP";
 
+    //Translate camera to locationb
+    var locationTP = new THREE.Vector3();
+    cube.getWorldPosition ( locationTP );
+    
+
+
+
+
+
+
+
+
+
+
+
+
+    const loader = new GLTFLoader()
+    loader.load(
+        './models/picture.gltf',
+        function (gltf) {
+
+
+            scene.add(gltf.scene)
+        },
+    )
     
 
     // Add wall
@@ -99,9 +125,6 @@ class App extends Component {
 
     // OrbitControls
     controls = new OrbitControls(camera, renderer.domElement);
-
-    //Translate camera to locationb
-    cube.position.copy (new THREE.Vector3 ());
 
     // Add popup geometry
     var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
