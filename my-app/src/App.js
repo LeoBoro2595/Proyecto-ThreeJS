@@ -5,7 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 // import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
+import axios from 'axios'
 
 let scene, camera, renderer, cube, wall, controls, popup;
 
@@ -49,6 +49,8 @@ class App extends Component {
     camera.position.y = 5;
 
     // Screen renderer
+    
+    
     renderer = new THREE.WebGLRenderer({ canvas: this.canvasRef.current });
     renderer.setSize(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", function () {
@@ -91,8 +93,6 @@ class App extends Component {
     //Translate camera to locationb
     var locationTP = new THREE.Vector3();
     cube.getWorldPosition ( locationTP );
-    
-
 
 
 
@@ -110,7 +110,7 @@ class App extends Component {
         function (gltf) {
 
 
-            scene.add(gltf.scene)
+            scene.add(gltf.scene);
         },
     )
     
@@ -157,6 +157,10 @@ class App extends Component {
 
     if (intersects.length > 0) { //Verifica si el mouse fue presionado encima de la posición del objeto
       this.showPopup();
+      id = this.getObjectById();
+      // axios.post("direccion", {
+      //   id: id
+      // })
     }
   }
 
@@ -165,6 +169,7 @@ class App extends Component {
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
   }
 
+  
 
   render() {
     return (
