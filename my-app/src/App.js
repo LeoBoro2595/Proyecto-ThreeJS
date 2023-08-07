@@ -1,11 +1,10 @@
 import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-// import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
-import { CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import axios from 'axios'
+// import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+// import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+// import axios from 'axios'
 
 let scene, camera, renderer, cube, wall, controls, popup;
 
@@ -104,15 +103,15 @@ class App extends Component {
 
 
 
-    const loader = new GLTFLoader()
-    loader.load(
-        './models/picture.gltf',
-        function (gltf) {
+    // const loader = new GLTFLoader()
+    // loader.load(
+    //     './models/picture.gltf',
+    //     function (gltf) {
 
 
-            scene.add(gltf.scene);
-        },
-    )
+    //         scene.add(gltf.scene);
+    //     },
+    // )
     
 
     // Add wall
@@ -125,6 +124,11 @@ class App extends Component {
 
     // OrbitControls
     controls = new OrbitControls(camera, renderer.domElement);
+    controls.movementSpeed = 5; // Velocidad de movimiento
+    controls.lookSpeed = 0.1;   // Sensibilidad del giro de la cámara
+    controls.lookVertical = true; // Permitir giro vertical
+
+    
 
     // Add popup geometry
     var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
@@ -157,7 +161,7 @@ class App extends Component {
 
     if (intersects.length > 0) { //Verifica si el mouse fue presionado encima de la posición del objeto
       this.showPopup();
-      id = this.getObjectById();
+      // id = this.getObjectById();
       // axios.post("direccion", {
       //   id: id
       // })
