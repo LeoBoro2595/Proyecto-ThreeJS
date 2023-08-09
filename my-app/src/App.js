@@ -1,12 +1,11 @@
 import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
-// import { FirstPersonControls } from 'three/addons/controls/FirstPersonControls.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PointerLockControls } from "./PointerLockControls";
 // import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // import axios from 'axios'
 
-let scene, camera, renderer, cube, wall, controls, popup;
+let scene, camera, renderer, cube, wall, popup, pControl;
 
 class App extends Component {
   constructor(props) {
@@ -36,6 +35,7 @@ class App extends Component {
     // Creating scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
+    scene.fog = new THREE.Fog(0x000000, 0, 100) // Niebla
 
     // Add camera
     camera = new THREE.PerspectiveCamera(
@@ -56,6 +56,7 @@ class App extends Component {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio)
     });
 
     // Add Grid
@@ -63,6 +64,11 @@ class App extends Component {
     scene.add(grid);
 
 
+
+    pControl = new PointerLockControls(camera, renderer.domElement)
+    document.getElementById('btnPlay').onclick = ()=>{
+      pControl.lock()
+    }
 
 
 
@@ -122,12 +128,6 @@ class App extends Component {
     wall.position.z = -5;
     wall.position.y = 2.5;
 
-    // OrbitControls
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.movementSpeed = 5; // Velocidad de movimiento
-    controls.lookSpeed = 0.1;   // Sensibilidad del giro de la cámara
-    controls.lookVertical = true; // Permitir giro vertical
-
     
 
     // Add popup geometry
@@ -143,7 +143,6 @@ class App extends Component {
   animate() {
     requestAnimationFrame(this.animate);
     renderer.render(scene, camera);
-    controls.update();
   }
 
   onCanvasClick(event) {
