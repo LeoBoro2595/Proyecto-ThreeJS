@@ -95,6 +95,9 @@ class App extends Component {
     cube.position.y = 0.5;
     cube.name = "positionTP";
 
+    
+    
+
     //Translate camera to locationb
     var locationTP = new THREE.Vector3();
     cube.getWorldPosition ( locationTP );
@@ -144,29 +147,39 @@ class App extends Component {
     requestAnimationFrame(this.animate);
     renderer.render(scene, camera);
   }
-
   onCanvasClick(event) {
-    const rect = this.canvasRef.current.getBoundingClientRect(); //Calcular coordenadas del mouse en el canvas
+    const rect = this.canvasRef.current.getBoundingClientRect();
     const mouse = {
       x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
       y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
     };
-
-    //Creo un raycaster, librería de three,js para poder interactuar con un objeto 3D en una escena.
+  
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera); //Posiciona el raycaster en la ubicación de la cámara para interactuar de manera correcta desde la vista del usuario
-
-    const intersects = raycaster.intersectObject(popup); //Comprueba si el "rayo" generado por el raycaster, intercepta un objeto 3D en la escena.
-
-    if (intersects.length > 0) { //Verifica si el mouse fue presionado encima de la posición del objeto
+    raycaster.setFromCamera(mouse, camera);
+  
+    const intersects = raycaster.intersectObject(popup); // Cambiar "cube" por "popup" para verificar la intersección con el popup
+  
+    if (intersects.length > 0) {
       this.showPopup();
-      // id = this.getObjectById();
-      // axios.post("direccion", {
-      //   id: id
-      // })
+    } else {
+      const cubeIntersects = raycaster.intersectObject(cube); // Verificar intersección con el cubo
+      if (cubeIntersects.length > 0) {
+        const position = cubeIntersects[0].point;
+        this.moveCameraToPosition(position);
+      }
     }
   }
-
+  
+  moveCameraToPosition(position) {
+    camera.position.copy(position);
+    camera.lookAt(position);
+  }
+  
+  
+  // id = this.getObjectById();
+  // axios.post("direccion", {
+  //   id: id
+  // })
   showPopup() {
     const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
