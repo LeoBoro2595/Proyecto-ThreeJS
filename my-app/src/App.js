@@ -1,11 +1,11 @@
 import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
-import { PointerLockControls } from "./PointerLockControls";
 // import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // import axios from 'axios'
 
-let scene, camera, renderer, cube, wall, popup, pControl;
+let scene, camera, renderer, cube, wall, popup;
+const target = new THREE.Vector2(); // Agregar esta línea
 
 class App extends Component {
   constructor(props) {
@@ -25,11 +25,28 @@ class App extends Component {
     this.init();
     this.animate();
     this.canvasRef.current.addEventListener("click", this.onCanvasClick);
+    this.canvasRef.current.addEventListener("mousemove", (event) => this.onMouseMove(event));
+
   }
+
 
   componentWillUnmount() {
     this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
   }
+
+  onMouseMove(event) {
+    const rect = this.canvasRef.current.getBoundingClientRect();
+    const mouse = {
+      x: ((event.clientX - rect.left) / rect.width) * 3 - 1,
+      y: -((event.clientY - rect.top) / rect.height) * 3 + 1,
+    };
+  
+    // Calcula el movimiento del mouse y ajusta la rotación de la cámara
+    target.x = mouse.x * -1.5;
+    target.y = mouse.y * 0.5;
+  }
+  
+
 
   init() {
     // Creating scene
@@ -63,25 +80,10 @@ class App extends Component {
     var grid = new THREE.GridHelper(100, 50);
     scene.add(grid);
 
-
-
-    pControl = new PointerLockControls(camera, renderer.domElement)
-    document.getElementById('btnPlay').onclick = ()=>{
-      pControl.lock()
-    }
-
-
-
-
-    
     // Add Point Light
     var light = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(light);
     light.position.set(1, 5, 8);
-
-
-
-
 
 
     // Add geometry
@@ -144,9 +146,14 @@ class App extends Component {
   }
 
   animate() {
+    camera.rotation.x += 0.25 * (target.y - camera.rotation.x);
+    camera.rotation.y += 0.05 * (target.x - camera.rotation.y);
+  
     requestAnimationFrame(this.animate);
     renderer.render(scene, camera);
   }
+
+  
   onCanvasClick(event) {
     const rect = this.canvasRef.current.getBoundingClientRect();
     const mouse = {
@@ -192,19 +199,34 @@ class App extends Component {
       <div>
         <canvas ref={this.canvasRef} className="App" />
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
-        <i className="fa-solid fa-xmark" id="crossClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
+        <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
 
-        <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
+        {/* <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video> */}
 
+        {/* <div id="containerUI"> */}
+          <h1 id="UItitle">Title</h1>
           <p id="UItext">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
           quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
           Distinctio, labore.
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+          Distinctio, labore.
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+          Distinctio, labore.
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+          Distinctio, labore.
+          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+          Distinctio, labore.
           </p>
+        {/* </div> */}
           
-          <audio controls src="#"></audio>
+          {/* <audio controls src="#"></audio> */}
 
-          <p className="creditosProyecto">Text</p>
+          {/* <p className="creditosProyecto">Text</p> */}
 
         </div>
       </div>
