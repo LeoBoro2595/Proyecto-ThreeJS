@@ -73,6 +73,7 @@ class App extends Component {
 
     // Screen renderer    
     renderer = new THREE.WebGLRenderer({ canvas: this.canvasRef.current });
+    // renderer.setSize(854, 480);
     renderer.setSize(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", function () {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -92,11 +93,14 @@ class App extends Component {
 
 
     // Añadir cubo
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshStandardMaterial({ color: 0xff0000, wireframe: false });
+    // var geometry = new THREE.BoxGeometry(1, 1, 1); CUBO
+    var geometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
+    var material = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100 });
     cube = new THREE.Mesh(geometry, material);
+    cube.rotation.x = Math.PI / 2;
     scene.add(cube);
     cube.position.y = 0.5;
+    cube.position.z = 1;
     cube.name = "positionTP";
 
     
@@ -130,7 +134,7 @@ class App extends Component {
 
     // Añadir la geometría del popup
     var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
-    var materialpopup = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true, emissive: 0xffffff, shininess: 100 });
+    var materialpopup = new THREE.MeshPhongMaterial({ color: 0xa0ff4244, wireframe: true, emissive: 0xa0ff4244, shininess: 100 });
     popup = new THREE.Mesh(geometrypopup, materialpopup);
     popup.castShadow = false;
     scene.add(popup);
@@ -210,7 +214,9 @@ animate() {
 
         {/* <div id="containerUI"> */}
           <h1 id="UItitle">Title</h1>
+        {/* <video controls src="Humpty Dumpty _ Kids Songs _ Super Simple Songs.mp4" id="videoDiv"></video> */}
         <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
+        
           <p id="UItext">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
           quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
