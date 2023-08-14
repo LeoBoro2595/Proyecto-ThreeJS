@@ -5,7 +5,7 @@ import * as THREE from "three";
 // import axios from 'axios'
 
 let scene, camera, renderer, cube, wall, popup;
-const target = new THREE.Vector2(); // Agregar esta línea
+const target = new THREE.Vector2();
 
 class App extends Component {
   constructor(props) {
@@ -19,6 +19,7 @@ class App extends Component {
 
   closePopup() {
     this.popupRef.current.style.display = "none"; //Ocultar elemento "popup" del HTML modificando su display con el fin de no tener una posición exacta en la pantalla.
+    this.moveToCenter();
   }
 
   componentDidMount() {
@@ -41,32 +42,36 @@ class App extends Component {
       y: -((event.clientY - rect.top) / rect.height) * 3 + 1,
     };
   
-    // Calcula el movimiento del mouse y ajusta la rotación de la cámara
-    target.x = mouse.x * -1.5;
-    target.y = mouse.y * 0.5;
+    //Si está el popup abierto, la escena se bloquea
+    if (!this.popupRef.current.style.display || this.popupRef.current.style.display === 'none') {
+    // Calcular el movimiento del mouse y ajustar la rotación de la cámara
+      target.x = mouse.x * -1.5;
+      target.y = mouse.y * 0.5;
+    }
   }
   
-
+  // Mover la vista de la cámra hacia el centro al cerrar el popup
+  moveToCenter() {
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    target.x = ((centerX / window.innerWidth) * 2 - 1) * -1.5;
+    target.y = ((centerY / window.innerHeight) * 2 - 1) * 0.5;
+  }
+  
+  
 
   init() {
-    // Creating scene
+    // Crear escena
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.Fog(0x000000, 0, 100) // Niebla
 
-    // Add camera
-    camera = new THREE.PerspectiveCamera(
-      50,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
+    // Añadir cámara
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 20;
     camera.position.y = 5;
 
-    // Screen renderer
-    
-    
+    // Screen renderer    
     renderer = new THREE.WebGLRenderer({ canvas: this.canvasRef.current });
     renderer.setSize(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", function () {
@@ -76,22 +81,19 @@ class App extends Component {
       renderer.setPixelRatio(window.devicePixelRatio)
     });
 
-    // Add Grid
+    // Añadir Grid
     var grid = new THREE.GridHelper(100, 50);
     scene.add(grid);
 
-    // Add Point Light
+    // Añadir punto de luz
     var light = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(light);
     light.position.set(1, 5, 8);
 
 
-    // Add geometry
+    // Añadir cubo
     var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshStandardMaterial({
-      color: 0xff0000,
-      wireframe: false,
-    });
+    var material = new THREE.MeshStandardMaterial({ color: 0xff0000, wireframe: false });
     cube = new THREE.Mesh(geometry, material);
     scene.add(cube);
     cube.position.y = 0.5;
@@ -100,18 +102,9 @@ class App extends Component {
     
     
 
-    //Translate camera to locationb
+    // Mover la cámara hacia el objeto presionado
     var locationTP = new THREE.Vector3();
     cube.getWorldPosition ( locationTP );
-
-
-
-
-
-
-
-
-
 
 
     // const loader = new GLTFLoader()
@@ -125,7 +118,7 @@ class App extends Component {
     // )
     
 
-    // Add wall
+    // Añadir pared (test)
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
     var wallmaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
     wall = new THREE.Mesh(wallgeometry, wallmaterial);
@@ -135,7 +128,7 @@ class App extends Component {
 
     
 
-    // Add popup geometry
+    // Añadir la geometría del popup
     var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
     var materialpopup = new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: true, emissive: 0xffffff, shininess: 100 });
     popup = new THREE.Mesh(geometrypopup, materialpopup);
@@ -145,13 +138,19 @@ class App extends Component {
     popup.position.x = 5;
   }
 
-  animate() {
-    camera.rotation.x += 0.25 * (target.y - camera.rotation.x);
-    camera.rotation.y += 0.05 * (target.x - camera.rotation.y);
-  
-    requestAnimationFrame(this.animate);
-    renderer.render(scene, camera);
-  }
+animate() {
+  // Suavizar el movimiento de la cámara
+  const lerpAmount = 0.05; // Suavidad del movimiento
+  const targetRotationX = target.y;
+  const targetRotationY = target.x;
+
+  camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotationX, lerpAmount);
+  camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotationY, lerpAmount);
+
+  requestAnimationFrame(this.animate);
+  renderer.render(scene, camera);
+}
+
 
   
   onCanvasClick(event) {
@@ -164,29 +163,36 @@ class App extends Component {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
   
-    const intersects = raycaster.intersectObject(popup); // Cambiar "cube" por "popup" para verificar la intersección con el popup
+    const intersects = raycaster.intersectObject(popup);
   
     if (intersects.length > 0) {
       this.showPopup();
     } else {
-      const cubeIntersects = raycaster.intersectObject(cube); // Verificar intersección con el cubo
+      const cubeIntersects = raycaster.intersectObject(cube);
       if (cubeIntersects.length > 0) {
         const position = cubeIntersects[0].point;
-        this.moveCameraToPosition(position);
+        const cameraY = camera.position.y; // Guarda la altura actual de la cámara
+        camera.position.copy(position);
+        camera.position.y = cameraY; // Restaura la altura de la cámara
+        camera.lookAt(position);
+        // id = this.getObjectById();
+        // axios.post("direccion", {
+        //   id: id
+        // })
       }
     }
   }
   
+  
   moveCameraToPosition(position) {
+    const cameraY = camera.position.y; // Guardar posición Z
     camera.position.copy(position);
+    camera.position.z = cameraY; // Igualar altura de la cámara a la posición de la cámara
     camera.lookAt(position);
   }
   
   
-  // id = this.getObjectById();
-  // axios.post("direccion", {
-  //   id: id
-  // })
+
   showPopup() {
     const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
@@ -201,10 +207,10 @@ class App extends Component {
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
         <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
 
-        {/* <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video> */}
 
         {/* <div id="containerUI"> */}
           <h1 id="UItitle">Title</h1>
+        <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
           <p id="UItext">
           Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
           quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
