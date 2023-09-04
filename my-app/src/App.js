@@ -1,10 +1,12 @@
 import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
-// import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader';
+
+
 // import axios from 'axios'
 
-let scene, camera, renderer, cube, wall, popup;
+let scene, camera, renderer, cube, wall, popup, loader;
 const target = new THREE.Vector2();
 
 class App extends Component {
@@ -15,6 +17,23 @@ class App extends Component {
     this.animate = this.animate.bind(this);
     this.onCanvasClick = this.onCanvasClick.bind(this); //Referenciar al clickear en la posición determinada en el canvas
     this.closePopup = this.closePopup.bind(this);
+    this.onMouseWheel = this.onMouseWheel.bind(this);
+
+    // Límites de rotación de la cámara
+    this.minRotationX = -Math.PI / 4;
+    this.maxRotationX = Math.PI / 4;
+
+    this.minRotationY = -Math.PI / 4;
+    this.maxRotationY = Math.PI / 4;
+
+    // Zoom
+    this.zoomSpeed = 0.1;
+    this.targetZoom = 1;
+    this.currentZoom = 1;
+
+    this.state = {
+      zoom: 1,
+    };
   }
 
   closePopup() {
@@ -28,8 +47,30 @@ class App extends Component {
     this.canvasRef.current.addEventListener("click", this.onCanvasClick);
     this.canvasRef.current.addEventListener("mousemove", (event) => this.onMouseMove(event));
 
+    this.canvasRef.current.addEventListener("wheel", this.onMouseWheel); // Zoom en la cámara
   }
 
+  onMouseWheel(event) {
+    event.preventDefault();
+    // Límite del zoom (Cuanto zoom se puede hacer en la escena)
+    const minZoom = 0.75;
+    const maxZoom = 20;
+  
+    const delta = event.deltaY * 0.001;
+  
+    const newZoom = THREE.MathUtils.clamp(
+      this.state.zoom - delta,
+      minZoom,
+      maxZoom
+    );
+  
+    this.setState({ zoom: newZoom });
+  
+    camera.fov = 50 / newZoom;
+    camera.updateProjectionMatrix();
+  }
+  
+  
 
   componentWillUnmount() {
     this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
@@ -111,15 +152,16 @@ class App extends Component {
     cube.getWorldPosition ( locationTP );
 
 
-    // const loader = new GLTFLoader()
-    // loader.load(
-    //     './models/picture.gltf',
-    //     function (gltf) {
+    loader = new GLTFLoader();
 
-
-    //         scene.add(gltf.scene);
-    //     },
-    // )
+    loader.load('models/hamburguesa.gltf', (gltf) => {
+      const modelo3D = gltf.scene;
+  
+      modelo3D.position.set(0, 0, 0)
+      modelo3D.scale.set(1, 1, 1);
+  
+      scene.add(modelo3D);
+    });
     
 
     // Añadir pared (test)
@@ -138,22 +180,26 @@ class App extends Component {
     popup = new THREE.Mesh(geometrypopup, materialpopup);
     popup.castShadow = false;
     scene.add(popup);
-    popup.position.y = 0.5;
-    popup.position.x = 5;
+    popup.position.y = 3;
+    popup.position.x = 0;
+    popup.position.z = -4;
+
+
+    const video = document.getElementById( 'video' );
+    const texturevideo = new THREE.VideoTexture( video );
   }
-
 animate() {
-  // Suavizar el movimiento de la cámara
-  const lerpAmount = 0.05; // Suavidad del movimiento
-  const targetRotationX = target.y;
-  const targetRotationY = target.x;
+    // Suavizar el movimiento de la cámara
+    const lerpAmount = 0.05; // Suavidad del movimiento
+    const targetRotationX = THREE.MathUtils.clamp(target.y, this.minRotationX, this.maxRotationX);
+    const targetRotationY = THREE.MathUtils.clamp(target.x, this.minRotationY, this.maxRotationY);
 
-  camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotationX, lerpAmount);
-  camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotationY, lerpAmount);
+    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotationX, lerpAmount);
+    camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotationY, lerpAmount);
 
-  requestAnimationFrame(this.animate);
-  renderer.render(scene, camera);
-}
+    requestAnimationFrame(this.animate);
+    renderer.render(scene, camera);
+  }
 
 
   
@@ -202,6 +248,7 @@ animate() {
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
   }
 
+  
   
 
   render() {
