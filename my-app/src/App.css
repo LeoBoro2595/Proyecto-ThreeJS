@@ -4,11 +4,6 @@ body {
   max-height: 100%;
 }
 
-/* #root {
-  margin-top: 10%;
-  margin-left: 30%;
-} */
-
 #popup {
   position: absolute;
   margin-top: 25vh;
@@ -74,4 +69,15 @@ body {
   border: 2px solid black;
   font-family: Georgia, 'Times New Roman', Times, serif;
   margin-bottom: 30px;
+}
+
+.AppMenu {
+  position: absolute;
+  top: 50%;
+  left: 3%;
+  width: 20%;
+  height: 40%;
+  background-color: rgb(255, 255, 255, 0.9);
+  border-radius: 1.75%;
+  z-index: 1;
 }

@@ -14,9 +14,11 @@ class App extends Component {
     super(props);
     this.canvasRef = React.createRef();
     this.popupRef = React.createRef();
+    this.menuRef = React.createRef();
     this.animate = this.animate.bind(this);
     this.onCanvasClick = this.onCanvasClick.bind(this); //Referenciar al clickear en la posición determinada en el canvas
     this.closePopup = this.closePopup.bind(this);
+    this.closeMenu = this.closeMenu.bind(this);
     this.onMouseWheel = this.onMouseWheel.bind(this);
 
     // Límites de rotación de la cámara
@@ -39,6 +41,10 @@ class App extends Component {
   closePopup() {
     this.popupRef.current.style.display = "none"; //Ocultar elemento "popup" del HTML modificando su display con el fin de no tener una posición exacta en la pantalla.
     this.moveToCenter();
+  }
+
+  closeMenu() {
+    this.menuRef.current.style.display = "none";
   }
 
   componentDidMount() {
@@ -255,6 +261,17 @@ animate() {
     return (
       <div>
         <canvas ref={this.canvasRef} className="App" />
+        <div className="AppMenu" ref={this.menuRef}>
+        <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
+        <h1>SOY GOD</h1>
+        <ul>
+          <li><a href="#">SI</a></li>
+          <li><a href="#">SI</a></li>
+          <li><a href="https://iara.ar" target="_blank"> Ohh si </a></li>
+
+        </ul>
+        </div>
+
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
         <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
 
@@ -288,6 +305,8 @@ animate() {
           {/* <p className="creditosProyecto">Text</p> */}
 
         </div>
+
+        
       </div>
     );
   }
