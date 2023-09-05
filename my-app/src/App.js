@@ -17,6 +17,7 @@ class App extends Component {
     this.menuRef = React.createRef();
     this.animate = this.animate.bind(this);
     this.onCanvasClick = this.onCanvasClick.bind(this); //Referenciar al clickear en la posición determinada en el canvas
+    this.onLinkClick = this.onLinkClick.bind(this);
     this.closePopup = this.closePopup.bind(this);
     this.closeMenu = this.closeMenu.bind(this);
     this.onMouseWheel = this.onMouseWheel.bind(this);
@@ -254,6 +255,23 @@ animate() {
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
   }
 
+  onLinkClick(event) {
+    if (event.target.id === 'linkTP') {
+      event.preventDefault();
+      
+      const position = cube.position; // Cambia esta línea según la ubicación deseada
+      const cameraY = camera.position.y; // Guarda la altura actual de la cámara
+      camera.position.copy(position);
+      camera.position.y = cameraY; // Restaura la altura de la cámara
+      camera.lookAt(position);
+      // id = this.getObjectById();
+      // axios.post("direccion", {
+      //   id: id
+      // })
+    }
+  }
+  
+
   
   
 
@@ -264,12 +282,12 @@ animate() {
         <div className="AppMenu" ref={this.menuRef}>
         <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
         <h1>SOY GOD</h1>
-        <ul>
+        <ol>
           <li><a href="#">SI</a></li>
-          <li><a href="#">SI</a></li>
+          <li><a href="#" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a></li>
           <li><a href="https://iara.ar" target="_blank"> Ohh si </a></li>
 
-        </ul>
+        </ol>
         </div>
 
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}

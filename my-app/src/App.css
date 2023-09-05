@@ -81,3 +81,17 @@ body {
   border-radius: 1.75%;
   z-index: 1;
 }
+
+.AppMenu > ol {
+  font-size: 36px;
+}
+
+.AppMenu > ol > li > a {
+  text-decoration: none;
+  color: black;
+}
+
+.AppMenu > ol > li > a:hover {
+  text-decoration: double;
+  color: rgb(180, 180, 180);
+}
