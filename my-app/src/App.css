@@ -72,6 +72,8 @@ body {
 }
 
 .AppMenu {
+  /* overflow-y: scroll;
+  overflow-x: hidden; */
   position: absolute;
   top: 50%;
   left: 3%;
@@ -94,4 +96,20 @@ body {
 .AppMenu > ol > li > a:hover {
   text-decoration: double;
   color: rgb(180, 180, 180);
+}
+
+.btnCloseMenu {
+  position: absolute;
+  top: 20%;
+  left: 1.5%; 
+  background-color: rgb(165, 165, 165);
+  border-radius: 10%;
+  padding: 5px 5px 2px 5px;
+  font-size: 34px;
+  z-index: 1;
+}
+
+.btnCloseMenu:hover {
+  background-color: rgb(231, 231, 231);
+  cursor: pointer;
 }

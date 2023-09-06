@@ -17,11 +17,12 @@ class App extends Component {
     this.canvasRef = React.createRef();
     this.popupRef = React.createRef();
     this.menuRef = React.createRef();
+    this.openMenu = this.openMenu.bind(this);
+    this.closeMenu = this.closeMenu.bind(this);
     this.animate = this.animate.bind(this);
     this.onCanvasClick = this.onCanvasClick.bind(this); //Referenciar al clickear en la posición determinada en el canvas
     this.onLinkClick = this.onLinkClick.bind(this);
     this.closePopup = this.closePopup.bind(this);
-    this.closeMenu = this.closeMenu.bind(this);
     this.onMouseWheel = this.onMouseWheel.bind(this);
 
     // Límites de rotación de la cámara
@@ -38,6 +39,7 @@ class App extends Component {
 
     this.state = {
       zoom: 1,
+      isMenuVisible: true,
     };
   }
 
@@ -46,9 +48,15 @@ class App extends Component {
     this.moveToCenter();
   }
 
-  closeMenu() {
-    this.menuRef.current.style.display = "none";
-  }
+  openMenu = () => {
+  this.setState({ isMenuVisible: true });
+}
+
+closeMenu = () => {
+  this.setState({ isMenuVisible: false });
+}
+
+  
 
   componentDidMount() {
     this.init();
@@ -315,16 +323,20 @@ class App extends Component {
     return (
       <div>
         <canvas ref={this.canvasRef} className="App" />
-        <div className="AppMenu" ref={this.menuRef}>
-          <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
-          <h1>Menu de pisos</h1>
-          <ol>
-            <li><a href="#"> ... </a></li>
-            <li><a href="#" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a></li>
-            <li><a href="#" target="_blank"> ... </a></li>
+        <button className="btnCloseMenu" onClick={this.openMenu}><i class="fa-solid fa-question"></i></button>
+        {this.state.isMenuVisible && (
+  <div className="AppMenu" ref={this.menuRef}>
+    {/* Contenido del menú */}
+    <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
+    <h1>Menu de pisos</h1>
+    <ol>
+      <li><a href="#"> ... </a></li>
+      <li><a href="#" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a></li>
+      <li><a href="#" target="_blank"> ... </a></li>
+    </ol>
+  </div>
+)}
 
-          </ol>
-        </div>
 
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
           <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
