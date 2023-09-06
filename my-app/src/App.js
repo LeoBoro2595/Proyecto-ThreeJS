@@ -2,11 +2,13 @@ import React, { Component } from "react";
 import "./App.css";
 import * as THREE from "three";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+// import DRACOLoader from './DRACOLoader'
 
 
 // import axios from 'axios'
 
-let scene, camera, renderer, cube, wall, popup, loader;
+let scene, camera, renderer, cube, wall, popup;
 const target = new THREE.Vector2();
 
 class App extends Component {
@@ -55,49 +57,92 @@ class App extends Component {
     this.canvasRef.current.addEventListener("mousemove", (event) => this.onMouseMove(event));
 
     this.canvasRef.current.addEventListener("wheel", this.onMouseWheel); // Zoom en la cámara
+
+
+    
+    const loader = new GLTFLoader();
+
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
+    loader.setDRACOLoader(dracoLoader);
+
+    loader.load('/models/poly.gltf',
+      function (gltf) {
+        const model = gltf.scene;
+
+
+        model.scale.set(10, 10, 10);
+        model.position.set(0, 7.5, 0);
+
+
+        console.log(gltf)
+        scene.add(gltf.scene);
+
+        // gltf.animations; // Array<THREE.AnimationClip>
+        // gltf.scene = loader; // THREE.Group
+        // gltf.scenes; // Array<THREE.Group>
+        // gltf.cameras; // Array<THREE.Camera>
+        // gltf.asset; // Object
+
+      },
+      // called while loading is progressing
+      function (xhr) {
+
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+
+      },
+      // called when loading has errors
+      function (error) {
+
+        console.log(error);
+
+      }
+    );
   }
 
+  // Hacer zoom
   onMouseWheel(event) {
     event.preventDefault();
     // Límite del zoom (Cuanto zoom se puede hacer en la escena)
     const minZoom = 0.75;
     const maxZoom = 20;
-  
+
     const delta = event.deltaY * 0.001;
-  
+
     const newZoom = THREE.MathUtils.clamp(
       this.state.zoom - delta,
       minZoom,
       maxZoom
     );
-  
+
     this.setState({ zoom: newZoom });
-  
+
     camera.fov = 50 / newZoom;
     camera.updateProjectionMatrix();
   }
-  
-  
+
+
 
   componentWillUnmount() {
     this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
   }
 
+  // Función para detectar el movimiento del mouse en el canvas para el movimiento de la cámara
   onMouseMove(event) {
     const rect = this.canvasRef.current.getBoundingClientRect();
     const mouse = {
       x: ((event.clientX - rect.left) / rect.width) * 3 - 1,
       y: -((event.clientY - rect.top) / rect.height) * 3 + 1,
     };
-  
+
     //Si está el popup abierto, la escena se bloquea
     if (!this.popupRef.current.style.display || this.popupRef.current.style.display === 'none') {
-    // Calcular el movimiento del mouse y ajustar la rotación de la cámara
+      // Calcular el movimiento del mouse y ajustar la rotación de la cámara
       target.x = mouse.x * -1.5;
       target.y = mouse.y * 0.5;
     }
   }
-  
+
   // Mover la vista de la cámra hacia el centro al cerrar el popup
   moveToCenter() {
     const centerX = window.innerWidth / 2;
@@ -105,8 +150,8 @@ class App extends Component {
     target.x = ((centerX / window.innerWidth) * 2 - 1) * -1.5;
     target.y = ((centerY / window.innerHeight) * 2 - 1) * 0.5;
   }
-  
-  
+
+
 
   init() {
     // Crear escena
@@ -141,35 +186,24 @@ class App extends Component {
 
 
     // Añadir cubo
-    // var geometry = new THREE.BoxGeometry(1, 1, 1); CUBO
     var geometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
     var material = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100 });
     cube = new THREE.Mesh(geometry, material);
     cube.rotation.x = Math.PI / 2;
     scene.add(cube);
     cube.position.y = 0.5;
-    cube.position.z = 1;
+    cube.position.z = 7.5;
+    cube.position.x = 7.5;
     cube.name = "positionTP";
 
-    
-    
+
+
 
     // Mover la cámara hacia el objeto presionado
     var locationTP = new THREE.Vector3();
-    cube.getWorldPosition ( locationTP );
+    cube.getWorldPosition(locationTP);
 
 
-    loader = new GLTFLoader();
-
-    loader.load('models/hamburguesa.gltf', (gltf) => {
-      const modelo3D = gltf.scene;
-  
-      modelo3D.position.set(0, 0, 0)
-      modelo3D.scale.set(1, 1, 1);
-  
-      scene.add(modelo3D);
-    });
-    
 
     // Añadir pared (test)
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
@@ -179,23 +213,24 @@ class App extends Component {
     wall.position.z = -5;
     wall.position.y = 2.5;
 
-    
+
 
     // Añadir la geometría del popup
     var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
-    var materialpopup = new THREE.MeshPhongMaterial({ color: 0xa0ff4244, wireframe: true, emissive: 0xa0ff4244, shininess: 100 });
+    var materialpopup = new THREE.MeshPhongMaterial({ wireframe: true, emissive: 0xffffff });
     popup = new THREE.Mesh(geometrypopup, materialpopup);
     popup.castShadow = false;
     scene.add(popup);
-    popup.position.y = 3;
-    popup.position.x = 0;
-    popup.position.z = -4;
+    popup.position.y = 5;
+    popup.position.x = 12;
+    popup.position.z = 5.5;
 
 
-    const video = document.getElementById( 'video' );
-    const texturevideo = new THREE.VideoTexture( video );
+    const video = document.getElementById('video');
+    const texturevideo = new THREE.VideoTexture(video);
   }
-animate() {
+
+  animate() {
     // Suavizar el movimiento de la cámara
     const lerpAmount = 0.05; // Suavidad del movimiento
     const targetRotationX = THREE.MathUtils.clamp(target.y, this.minRotationX, this.maxRotationX);
@@ -209,19 +244,19 @@ animate() {
   }
 
 
-  
+  // Detectar si se clickeó el canvas para mostrar el popup con la información de una obra
   onCanvasClick(event) {
     const rect = this.canvasRef.current.getBoundingClientRect();
     const mouse = {
       x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
       y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
     };
-  
+
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
-  
+
     const intersects = raycaster.intersectObject(popup);
-  
+
     if (intersects.length > 0) {
       this.showPopup();
     } else {
@@ -239,26 +274,27 @@ animate() {
       }
     }
   }
-  
-  
+
+
   moveCameraToPosition(position) {
     const cameraY = camera.position.y; // Guardar posición Z
     camera.position.copy(position);
     camera.position.z = cameraY; // Igualar altura de la cámara a la posición de la cámara
     camera.lookAt(position);
   }
-  
-  
 
+
+  // Desplegar el popup
   showPopup() {
     const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
   }
 
+  // Detectar si se clickeó sobre el menu para transportarse por la escena (Diferentes pisos)
   onLinkClick(event) {
     if (event.target.id === 'linkTP') {
       event.preventDefault();
-      
+
       const position = cube.position; // Cambia esta línea según la ubicación deseada
       const cameraY = camera.position.y; // Guarda la altura actual de la cámara
       camera.position.copy(position);
@@ -270,61 +306,61 @@ animate() {
       // })
     }
   }
-  
 
-  
-  
+
+
+
 
   render() {
     return (
       <div>
         <canvas ref={this.canvasRef} className="App" />
         <div className="AppMenu" ref={this.menuRef}>
-        <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
-        <h1>SOY GOD</h1>
-        <ol>
-          <li><a href="#">SI</a></li>
-          <li><a href="#" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a></li>
-          <li><a href="https://iara.ar" target="_blank"> Ohh si </a></li>
+          <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
+          <h1>Menu de pisos</h1>
+          <ol>
+            <li><a href="#"> ... </a></li>
+            <li><a href="#" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a></li>
+            <li><a href="#" target="_blank"> ... </a></li>
 
-        </ol>
+          </ol>
         </div>
 
         <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
-        <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
+          <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
 
 
-        {/* <div id="containerUI"> */}
+
           <h1 id="UItitle">Title</h1>
-        {/* <video controls src="Humpty Dumpty _ Kids Songs _ Super Simple Songs.mp4" id="videoDiv"></video> */}
-        <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
-        
+          {/* <video controls src="Humpty Dumpty _ Kids Songs _ Super Simple Songs.mp4" id="videoDiv"></video> */}
+          <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
+
           <p id="UItext">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
-          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
-          Distinctio, labore.
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
-          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
-          Distinctio, labore.
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
-          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
-          Distinctio, labore.
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
-          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
-          Distinctio, labore.
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
-          quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
-          Distinctio, labore.
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+            quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+            Distinctio, labore.
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+            quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+            Distinctio, labore.
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+            quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+            Distinctio, labore.
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+            quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+            Distinctio, labore.
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
+            quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
+            Distinctio, labore.
           </p>
-        {/* </div> */}
-          
+          {/* </div> */}
+
           {/* <audio controls src="#"></audio> */}
 
           {/* <p className="creditosProyecto">Text</p> */}
 
         </div>
 
-        
+
       </div>
     );
   }
