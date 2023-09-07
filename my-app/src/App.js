@@ -55,7 +55,7 @@ class App extends Component {
   this.setState({ isMenuVisible: true });
 }
 
-closeMenu = () => {
+  closeMenu = () => {
   this.setState({ isMenuVisible: false });
 }
 
@@ -183,11 +183,11 @@ closeMenu = () => {
     var material = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100 });
     cube = new THREE.Mesh(geometry, material);
     cube.rotation.x = Math.PI / 2;
+    cube.name = "teleport";
     scene.add(cube);
     cube.position.y = 0.5;
     cube.position.z = 7.5;
     cube.position.x = 7.5;
-    cube.name = "positionTP";
 
 
 
@@ -243,6 +243,7 @@ document.addEventListener("mousemove", function (event) {
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
     var wallmaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
     wall = new THREE.Mesh(wallgeometry, wallmaterial);
+    wall.name = "teleport";
     scene.add(wall);
     wall.position.z = -5;
     wall.position.y = 2.5;
@@ -275,34 +276,45 @@ document.addEventListener("mousemove", function (event) {
 
   // Detectar si se clickeó el canvas para mostrar el popup con la información de una obra
   onCanvasClick(event) {
-    const rect = this.canvasRef.current.getBoundingClientRect();
-    const mouse = {
-      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
-    };
+  const rect = this.canvasRef.current.getBoundingClientRect();
+  const mouse = {
+    x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  };
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObject(popup);
+  const intersects = raycaster.intersectObject(popup);
 
-    if (intersects.length > 0) {
-      this.showPopup();
-    } else {
-      const cubeIntersects = raycaster.intersectObject(cube);
-      if (cubeIntersects.length > 0) {
-        const position = cubeIntersects[0].point;
-        const cameraY = camera.position.y; // Guarda la altura actual de la cámara
-        camera.position.copy(position);
-        camera.position.y = cameraY; // Restaura la altura de la cámara
-        camera.lookAt(position);
-        // id = this.getObjectById();
-        // axios.post("direccion", {
-        //   id: id
-        // })
+  if (intersects.length > 0) {
+    this.showPopup();
+  } else {
+    const objectsWithTeleportID = [];
+
+    // Recorre todos los objetos en la escena y encuentra los que tienen el ID "teleport"
+    scene.traverse((obj) => {
+      if (obj.name === "teleport") {
+        objectsWithTeleportID.push(obj);
       }
+    });
+
+    const teleportIntersects = raycaster.intersectObjects(objectsWithTeleportID);
+
+    if (teleportIntersects.length > 0) {
+      const position = teleportIntersects[0].point;
+      const cameraY = camera.position.y; // Guarda la altura actual de la cámara
+      camera.position.copy(position);
+      camera.position.y = cameraY; // Restaura la altura de la cámara
+      camera.lookAt(position);
+      // id = this.getObjectById();
+      // axios.post("direccion", {
+      //   id: id
+      // })
     }
   }
+}
+
 
 
   moveCameraToPosition(position) {
