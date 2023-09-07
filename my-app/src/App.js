@@ -10,6 +10,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 let scene, camera, renderer, cube, wall, popup;
 const target = new THREE.Vector2();
+let isDragging
+let previousMousePosition
 
 class App extends Component {
   constructor(props) {
@@ -43,6 +45,7 @@ class App extends Component {
     };
   }
 
+
   closePopup() {
     this.popupRef.current.style.display = "none"; //Ocultar elemento "popup" del HTML modificando su display con el fin de no tener una posición exacta en la pantalla.
     this.moveToCenter();
@@ -62,14 +65,12 @@ closeMenu = () => {
     this.init();
     this.animate();
     this.canvasRef.current.addEventListener("click", this.onCanvasClick);
-    this.canvasRef.current.addEventListener("mousemove", (event) => this.onMouseMove(event));
 
     this.canvasRef.current.addEventListener("wheel", this.onMouseWheel); // Zoom en la cámara
 
 
     
     const loader = new GLTFLoader();
-
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
     loader.setDRACOLoader(dracoLoader);
@@ -135,22 +136,6 @@ closeMenu = () => {
     this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
   }
 
-  // Función para detectar el movimiento del mouse en el canvas para el movimiento de la cámara
-  onMouseMove(event) {
-    const rect = this.canvasRef.current.getBoundingClientRect();
-    const mouse = {
-      x: ((event.clientX - rect.left) / rect.width) * 3 - 1,
-      y: -((event.clientY - rect.top) / rect.height) * 3 + 1,
-    };
-
-    //Si está el popup abierto, la escena se bloquea
-    if (!this.popupRef.current.style.display || this.popupRef.current.style.display === 'none') {
-      // Calcular el movimiento del mouse y ajustar la rotación de la cámara
-      target.x = mouse.x * -1.5;
-      target.y = mouse.y * 0.5;
-    }
-  }
-
   // Mover la vista de la cámra hacia el centro al cerrar el popup
   moveToCenter() {
     const centerX = window.innerWidth / 2;
@@ -208,8 +193,49 @@ closeMenu = () => {
 
 
     // Mover la cámara hacia el objeto presionado
-    var locationTP = new THREE.Vector3();
-    cube.getWorldPosition(locationTP);
+    isDragging = false;
+previousMousePosition = { x: 0, y: 0 };
+
+// Agregar un listener de eventos para el ratón
+document.addEventListener("mousedown", function (event) {
+  isDragging = true;
+  previousMousePosition = {
+    x: event.clientX,
+    y: event.clientY,
+  };
+});
+
+document.addEventListener("mouseup", function () {
+  isDragging = false;
+});
+
+document.addEventListener("mousemove", function (event) {
+  if (!isDragging) return;
+
+  const deltaMove = {
+    x: event.clientX - previousMousePosition.x,
+    y: event.clientY - previousMousePosition.y,
+  };
+
+  // Ajustar la rotación de la cámara basada en el movimiento del mouse
+  const sensitivity = 0.002;
+  camera.rotation.y += deltaMove.x * sensitivity;
+  camera.rotation.x += deltaMove.y * sensitivity;
+
+  // Limitar la rotación vertical
+  const maxVerticalAngle = Math.PI / 2;
+  camera.rotation.x = Math.max(
+    -maxVerticalAngle,
+    Math.min(maxVerticalAngle, camera.rotation.x)
+  );
+
+  previousMousePosition = {
+    x: event.clientX,
+    y: event.clientY,
+  };
+});
+
+
 
 
 
@@ -240,12 +266,7 @@ closeMenu = () => {
 
   animate() {
     // Suavizar el movimiento de la cámara
-    const lerpAmount = 0.05; // Suavidad del movimiento
-    const targetRotationX = THREE.MathUtils.clamp(target.y, this.minRotationX, this.maxRotationX);
-    const targetRotationY = THREE.MathUtils.clamp(target.x, this.minRotationY, this.maxRotationY);
-
-    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotationX, lerpAmount);
-    camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotationY, lerpAmount);
+    const lerpAmount = 0.5; // Suavidad del movimiento
 
     requestAnimationFrame(this.animate);
     renderer.render(scene, camera);
