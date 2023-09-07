@@ -243,7 +243,6 @@ document.addEventListener("mousemove", function (event) {
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
     var wallmaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
     wall = new THREE.Mesh(wallgeometry, wallmaterial);
-    wall.name = "teleport";
     scene.add(wall);
     wall.position.z = -5;
     wall.position.y = 2.5;
@@ -359,13 +358,21 @@ document.addEventListener("mousemove", function (event) {
         <button className="btnCloseMenu" onClick={this.openMenu}><i class="fa-solid fa-question"></i></button>
         {this.state.isMenuVisible && (
   <div className="AppMenu" ref={this.menuRef}>
-    {/* Contenido del menú */}
     <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
     <h1>Menu de pisos</h1>
     <ol>
-      <li><a href="#"> ... </a></li>
-      <li><a href="#" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a></li>
-      <li><a href="#" target="_blank"> ... </a></li>
+      <li>
+        <a href="#" class="custom-text-1"> ... </a>
+        <p class="classText">Texto</p>
+      </li>
+      <li>
+        <a href="#" class="custom-text-2" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a>
+        <p class="classText">Texto</p>
+      </li>
+      <li>
+        <a href="#" class="custom-text-3"> ... </a>
+        <p class="classText">Texto</p>
+      </li>
     </ol>
   </div>
 )}

@@ -80,30 +80,69 @@ body {
 }
 
 .AppMenu {
-  /* overflow-y: scroll;
-  overflow-x: hidden; */
   position: absolute;
   top: 50%;
   left: 3%;
   width: 20%;
   height: 40%;
-  background-color: rgb(255, 255, 255, 0.9);
-  border-radius: 1.75%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   z-index: 1;
+  overflow: auto; /* Agregar desplazamiento vertical si es necesario */
 }
 
 .AppMenu > ol {
+
   font-size: 36px;
+}
+
+.AppMenu > ol > li {
+  margin-bottom: 15px;
 }
 
 .AppMenu > ol > li > a {
   text-decoration: none;
-  color: black;
+  color: #333; /* Cambiar el color del texto a un tono más oscuro */
+  font-size: 18px; /* Reducir el tamaño del texto para un aspecto más elegante */
+  display: block; /* Convertir en elementos de bloque para facilitar la interacción */
+  transition: color 0.3s; /* Agregar una transición de color suave al hacer hover */
 }
 
 .AppMenu > ol > li > a:hover {
   text-decoration: double;
   color: rgb(180, 180, 180);
+}
+
+ol {
+  list-style-type: none;
+}
+
+.custom-text-1::before {
+  content: "Piso 1";
+  display: block;
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.custom-text-2::before {
+  content: "Piso 2";
+  display: block;
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.custom-text-3::before {
+  content: "Piso 3";
+  display: block;
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+
+.classText {
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .btnCloseMenu {
