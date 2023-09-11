@@ -160,3 +160,19 @@ ol {
   background-color: rgb(231, 231, 231);
   cursor: pointer;
 }
+
+.dark-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background-color 0.5s;
+}
+
+.dark-overlay.active {
+  background-color: rgba(0, 0, 0, 1);
+  pointer-events: auto;
+}

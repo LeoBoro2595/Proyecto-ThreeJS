@@ -3,12 +3,12 @@ import "./App.css";
 import * as THREE from "three";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-// import DRACOLoader from './DRACOLoader'
 
 
 // import axios from 'axios'
 
-let scene, camera, renderer, cube, wall, popup;
+let scene, camera, renderer, wall, popup;
+const cubes = [];
 const target = new THREE.Vector2();
 let isDragging
 let previousMousePosition
@@ -42,14 +42,15 @@ class App extends Component {
     this.state = {
       zoom: 1,
       isMenuVisible: true,
+      isPopupVisible: false,
     };
+
+    this.cube = null;
+
+    this.teleportProgress = 0;
+    const teleportSpeed = 0.02;
   }
 
-
-  closePopup() {
-    this.popupRef.current.style.display = "none"; //Ocultar elemento "popup" del HTML modificando su display con el fin de no tener una posición exacta en la pantalla.
-    this.moveToCenter();
-  }
 
   openMenu = () => {
   this.setState({ isMenuVisible: true });
@@ -178,23 +179,23 @@ class App extends Component {
     light.position.set(1, 5, 8);
 
 
-    // Añadir cubo
-    var geometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
-    var material = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100 });
-    cube = new THREE.Mesh(geometry, material);
-    cube.rotation.x = Math.PI / 2;
-    cube.name = "teleport";
-    scene.add(cube);
-    cube.position.y = 0.5;
-    cube.position.z = 7.5;
-    cube.position.x = 7.5;
-
-
-
+    // Crear y agregar cubos adicionales con diferentes posiciones
+    this.cube1 = this.createCube(4.5, 0.5, 7.5);
+    this.cube1.name = "teleport";
+    scene.add(this.cube1);
+    const cube2 = this.createCube(5, 0.5, 2);
+    cube2.name = "teleport";
+    scene.add(cube2);
+    const cube3 = this.createCube(10, 0.5, -2);
+    cube3.name = "teleport";
+    scene.add(cube3);
+    const cube4 = this.createCube(0, 0.5, 4);
+    cube4.name = "teleport";
+    scene.add(cube4);
 
     // Mover la cámara hacia el objeto presionado
     isDragging = false;
-previousMousePosition = { x: 0, y: 0 };
+    previousMousePosition = { x: 0, y: 0 };
 
 // Agregar un listener de eventos para el ratón
 document.addEventListener("mousedown", function (event) {
@@ -235,10 +236,6 @@ document.addEventListener("mousemove", function (event) {
   };
 });
 
-
-
-
-
     // Añadir pared (test)
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
     var wallmaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false });
@@ -264,55 +261,101 @@ document.addEventListener("mousemove", function (event) {
     const texturevideo = new THREE.VideoTexture(video);
   }
 
-  animate() {
-    // Suavizar el movimiento de la cámara
-    const lerpAmount = 0.5; // Suavidad del movimiento
 
-    requestAnimationFrame(this.animate);
-    renderer.render(scene, camera);
+  createCube(x, y, z) {
+    const geometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xfffff,
+      wireframe: false,
+      emissive: 0xffffff,
+      shininess: 100,
+    });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.rotation.x = Math.PI / 2;
+    cube.position.set(x, y, z);
+    return cube;
   }
+
+  animate() {
+    if (!this.state.isPopupVisible) {
+      // Suavizar el movimiento de la cámara
+      const lerpAmount = 0.5; // Suavidad del movimiento
+  
+      requestAnimationFrame(this.animate);
+      renderer.render(scene, camera);
+    } else {
+      requestAnimationFrame(this.animate);
+    }
+  }  
 
 
   // Detectar si se clickeó el canvas para mostrar el popup con la información de una obra
   onCanvasClick(event) {
-  const rect = this.canvasRef.current.getBoundingClientRect();
-  const mouse = {
-    x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-    y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
-  };
-
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(mouse, camera);
-
-  const intersects = raycaster.intersectObject(popup);
-
-  if (intersects.length > 0) {
-    this.showPopup();
-  } else {
-    const objectsWithTeleportID = [];
-
-    // Recorre todos los objetos en la escena y encuentra los que tienen el ID "teleport"
-    scene.traverse((obj) => {
-      if (obj.name === "teleport") {
-        objectsWithTeleportID.push(obj);
+    const rect = this.canvasRef.current.getBoundingClientRect();
+    const mouse = {
+      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+    };
+  
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+  
+    const intersects = raycaster.intersectObject(popup);
+  
+    if (intersects.length > 0) {
+      this.showPopup();
+    } else {
+      const objectsWithTeleportID = [];
+  
+      // Recorre todos los objetos en la escena y encuentra los que tienen el ID "teleport"
+      scene.traverse((obj) => {
+        if (obj.name === "teleport") {
+          objectsWithTeleportID.push(obj);
+        }
+      });
+  
+      const teleportIntersects = raycaster.intersectObjects(objectsWithTeleportID);
+  
+      if (teleportIntersects.length > 0) {
+        const targetPosition = teleportIntersects[0].point;
+        const targetRotation = new THREE.Euler(0, camera.rotation.y, 0); // Mantener la rotación actual en el eje Y
+  
+        // Guarda la posición y rotación actual de la cámara
+        const startPosition = camera.position.clone();
+        const startRotation = camera.rotation.clone();
+  
+        const teleportSpeed = 0.02;
+        let teleportProgress = 0;
+  
+        const animateTeleport = () => {
+          teleportProgress += teleportSpeed;
+          if (teleportProgress < 1) {
+            const newPositionX = startPosition.x + (targetPosition.x - startPosition.x) * teleportProgress;
+            const newPositionZ = startPosition.z + (targetPosition.z - startPosition.z) * teleportProgress;
+            camera.position.set(newPositionX, camera.position.y, newPositionZ);
+        
+            camera.rotation.x = startRotation.x + (targetRotation.x - startRotation.x) * teleportProgress;
+            camera.rotation.y = startRotation.y + (targetRotation.y - startRotation.y) * teleportProgress;
+            camera.rotation.z = startRotation.z + (targetRotation.z - startRotation.z) * teleportProgress;
+        
+            requestAnimationFrame(animateTeleport);
+          } else {
+            camera.position.copy(targetPosition);
+            camera.position.y = startPosition.y; // Restaura la altura de la cámara
+            camera.rotation.copy(targetRotation);
+          }
+        };
+        
+        animateTeleport();
+  
+        // id = this.getObjectById();
+        // axios.post("direccion", {
+        //   id: id
+        // })
       }
-    });
-
-    const teleportIntersects = raycaster.intersectObjects(objectsWithTeleportID);
-
-    if (teleportIntersects.length > 0) {
-      const position = teleportIntersects[0].point;
-      const cameraY = camera.position.y; // Guarda la altura actual de la cámara
-      camera.position.copy(position);
-      camera.position.y = cameraY; // Restaura la altura de la cámara
-      camera.lookAt(position);
-      // id = this.getObjectById();
-      // axios.post("direccion", {
-      //   id: id
-      // })
     }
   }
-}
+  
 
 
 
@@ -324,10 +367,18 @@ document.addEventListener("mousemove", function (event) {
   }
 
 
-  // Desplegar el popup
+  // Mostrar el popup
   showPopup() {
     const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
     popup.style.display = "block"; //Cambia la propiedad "display" de "popup" con el fin de mostrarlo en la escena
+    this.setState({ isPopupVisible: true });
+  }
+
+  // Ocultar el popup
+  closePopup() {
+    this.popupRef.current.style.display = "none"; //Ocultar elemento "popup" del HTML modificando su display con el fin de no tener una posición exacta en la pantalla.
+    this.moveToCenter();
+    this.setState({ isPopupVisible: false });
   }
 
   // Detectar si se clickeó sobre el menu para transportarse por la escena (Diferentes pisos)
@@ -335,25 +386,35 @@ document.addEventListener("mousemove", function (event) {
     if (event.target.id === 'linkTP') {
       event.preventDefault();
 
-      const position = cube.position; // Cambia esta línea según la ubicación deseada
-      const cameraY = camera.position.y; // Guarda la altura actual de la cámara
-      camera.position.copy(position);
-      camera.position.y = cameraY; // Restaura la altura de la cámara
-      camera.lookAt(position);
-      // id = this.getObjectById();
+      this.setState({ isTeleporting: true });
+
+      setTimeout(() => {
+        const position = this.cube1.position;
+        const cameraY = camera.position.y;
+        camera.position.copy(position);
+        camera.position.y = cameraY;
+        camera.lookAt(position);
+
+        setTimeout(() => {
+          // Desactiva la pantalla negra
+          this.setState({ isTeleporting: false });
+        }, 1000); // Tiempo de animación de teletransportación
+      }, 500);
+    }
+  }
+  
+     // id = this.getObjectById();
       // axios.post("direccion", {
       //   id: id
       // })
-    }
-  }
-
-
 
 
 
   render() {
     return (
       <div>
+        <div id="darkOverlay" className={this.state.isTeleporting ? 'dark-overlay active' : 'dark-overlay'}></div>
+
         <canvas ref={this.canvasRef} className="App" />
         <button className="btnCloseMenu" onClick={this.openMenu}><i class="fa-solid fa-question"></i></button>
         {this.state.isMenuVisible && (
