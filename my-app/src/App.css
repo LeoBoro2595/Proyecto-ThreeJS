@@ -4,6 +4,7 @@ body {
   max-height: 100%;
 }
 
+
 .App:hover {
   cursor: grabbing;
 }
@@ -14,7 +15,7 @@ body {
 
 #popup {
   position: absolute;
-  margin-top: 25vh;
+  margin-top: 50vh;
   margin-left: 30%;
   padding-top: 5px;
   padding-bottom: 250px;
@@ -38,7 +39,7 @@ body {
   font-family: Arial;
   font-weight: bold;
   font-size: 1em;
-  padding: 5px; /* Ajusta el espacio interno del texto */
+  padding: 5px;
 }
 
 #eyeClose {
@@ -89,7 +90,7 @@ body {
   border-radius: 10px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   z-index: 1;
-  overflow: auto; /* Agregar desplazamiento vertical si es necesario */
+  overflow: auto;
 }
 
 .AppMenu > ol {
@@ -103,10 +104,10 @@ body {
 
 .AppMenu > ol > li > a {
   text-decoration: none;
-  color: #333; /* Cambiar el color del texto a un tono más oscuro */
-  font-size: 18px; /* Reducir el tamaño del texto para un aspecto más elegante */
-  display: block; /* Convertir en elementos de bloque para facilitar la interacción */
-  transition: color 0.3s; /* Agregar una transición de color suave al hacer hover */
+  color: #333;
+  font-size: 18px;
+  display: block;
+  transition: color 0.3s;
 }
 
 .AppMenu > ol > li > a:hover {
@@ -148,18 +149,20 @@ ol {
 .btnCloseMenu {
   position: absolute;
   top: 20%;
-  left: 1.5%; 
-  background-color: rgb(165, 165, 165);
-  border-radius: 10%;
-  padding: 5px 5px 2px 5px;
-  font-size: 34px;
-  z-index: 1;
-}
-
-.btnCloseMenu:hover {
-  background-color: rgb(231, 231, 231);
+  left: 1.5%;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 24px;
+  color: #838383;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
+  
+  .btnCloseMenu:hover {
+    background-color: #c2c2c2;
+  }
+  
 
 .dark-overlay {
   position: fixed;
