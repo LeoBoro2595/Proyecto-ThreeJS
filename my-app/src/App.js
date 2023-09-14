@@ -43,6 +43,7 @@ class App extends Component {
       zoom: 1,
       isMenuVisible: true,
       isPopupVisible: false,
+      isCloseMenuButtonVisible: false,
     };
 
     this.cube = null;
@@ -53,61 +54,43 @@ class App extends Component {
 
 
   openMenu = () => {
-  this.setState({ isMenuVisible: true });
+    this.setState({ isMenuVisible: true, isCloseMenuButtonVisible: false });
 }
 
   closeMenu = () => {
-  this.setState({ isMenuVisible: false });
+    this.setState({ isMenuVisible: false, isCloseMenuButtonVisible: true });
 }
 
+  // loader.load('/models/poly.gltf',
+
+  loadModel(modelPath, position, scale) {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
+    loader.setDRACOLoader(dracoLoader);
   
+    loader.load(modelPath, function (gltf) {
+      const model = gltf.scene;
+      model.scale.set(scale.x, scale.y, scale.z);
+      model.position.set(position.x, position.y, position.z);
+      scene.add(model);
+    });
+  }
 
   componentDidMount() {
     this.init();
     this.animate();
     this.canvasRef.current.addEventListener("click", this.onCanvasClick);
-
     this.canvasRef.current.addEventListener("wheel", this.onMouseWheel); // Zoom en la cámara
 
 
-    
-    const loader = new GLTFLoader();
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
-    loader.setDRACOLoader(dracoLoader);
-
-    loader.load('/models/poly.gltf',
-      function (gltf) {
-        const model = gltf.scene;
-
-
-        model.scale.set(10, 10, 10);
-        model.position.set(0, 7.5, 0);
-
-
-        console.log(gltf)
-        scene.add(gltf.scene);
-
-        // gltf.animations; // Array<THREE.AnimationClip>
-        // gltf.scene = loader; // THREE.Group
-        // gltf.scenes; // Array<THREE.Group>
-        // gltf.cameras; // Array<THREE.Camera>
-        // gltf.asset; // Object
-
-      },
-      // called while loading is progressing
-      function (xhr) {
-
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-
-      },
-      // called when loading has errors
-      function (error) {
-
-        console.log(error);
-
-      }
-    );
+    // Forma de añadir: UBICACIÓN ARCHIVO, new THREE.Vector3(UBICACIONES), new THREE.Vector3 (DIMENSIONES)
+    this.loadModel('/models/poly.gltf', new THREE.Vector3(0, 7.5, 0), new THREE.Vector3(10, 10, 10));
+    this.loadModel('/models/ortDesk.gltf', new THREE.Vector3(-5, 0.5, 0), new THREE.Vector3(1, 1, 1));
+  }
+  
+  componentWillUnmount() {
+    this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
   }
 
   // Hacer zoom
@@ -133,9 +116,6 @@ class App extends Component {
 
 
 
-  componentWillUnmount() {
-    this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
-  }
 
   // Mover la vista de la cámra hacia el centro al cerrar el popup
   moveToCenter() {
@@ -180,16 +160,16 @@ class App extends Component {
 
 
     // Crear y agregar cubos adicionales con diferentes posiciones
-    this.cube1 = this.createCube(4.5, 0.5, 7.5);
+    this.cube1 = this.createInteractiveTorus(4.5, 0.5, 7.5);
     this.cube1.name = "teleport";
     scene.add(this.cube1);
-    const cube2 = this.createCube(5, 0.5, 2);
+    const cube2 = this.createInteractiveTorus(5, 0.5, 2);
     cube2.name = "teleport";
     scene.add(cube2);
-    const cube3 = this.createCube(10, 0.5, -2);
+    const cube3 = this.createInteractiveTorus(10, 0.5, -2);
     cube3.name = "teleport";
     scene.add(cube3);
-    const cube4 = this.createCube(0, 0.5, 4);
+    const cube4 = this.createInteractiveTorus(0, 0.5, 4);
     cube4.name = "teleport";
     scene.add(cube4);
 
@@ -219,6 +199,7 @@ document.addEventListener("mousemove", function (event) {
   };
 
   // Ajustar la rotación de la cámara basada en el movimiento del mouse
+  camera.rotation.order = "YXZ";
   const sensitivity = 0.002;
   camera.rotation.y += deltaMove.x * sensitivity;
   camera.rotation.x += deltaMove.y * sensitivity;
@@ -255,26 +236,30 @@ document.addEventListener("mousemove", function (event) {
     popup.position.y = 5;
     popup.position.x = 12;
     popup.position.z = 5.5;
-
-
-    const video = document.getElementById('video');
-    const texturevideo = new THREE.VideoTexture(video);
   }
 
 
-  createCube(x, y, z) {
-    const geometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xfffff,
-      wireframe: false,
-      emissive: 0xffffff,
-      shininess: 100,
-    });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.rotation.x = Math.PI / 2;
-    cube.position.set(x, y, z);
-    return cube;
-  }
+
+
+
+createInteractiveTorus(x, y, z) {
+  const torusGeometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
+  const torusMaterial = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100, });
+  const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+  torus.rotation.x = Math.PI / 2;
+
+  // Collider encima de la geometría del TP para poder tener un mayor radio para clickear y teletransportarse
+  const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const boxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+  const interactiveMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+
+  const interactiveTorus = new THREE.Group();
+  interactiveTorus.add(torus);
+  interactiveTorus.add(interactiveMesh);
+
+  interactiveTorus.position.set(x, y, z);
+  return interactiveTorus;
+}
 
   animate() {
     if (!this.state.isPopupVisible) {
@@ -416,9 +401,12 @@ document.addEventListener("mousemove", function (event) {
         <div id="darkOverlay" className={this.state.isTeleporting ? 'dark-overlay active' : 'dark-overlay'}></div>
 
         <canvas ref={this.canvasRef} className="App" />
-        <button className="btnCloseMenu" onClick={this.openMenu}><i class="fa-solid fa-question"></i></button>
-        {this.state.isMenuVisible && (
-  <div className="AppMenu" ref={this.menuRef}>
+    <canvas ref={this.canvasRef} className="App" />
+      {this.state.isCloseMenuButtonVisible && (
+        <button className="btnCloseMenu" onClick={this.openMenu}><i className="fa-solid fa-question"></i></button>
+      )}
+      {this.state.isMenuVisible && (
+        <div className="AppMenu" ref={this.menuRef}>
     <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closeMenu}></i>
     <h1>Menu de pisos</h1>
     <ol>
