@@ -63,7 +63,7 @@ class App extends Component {
 
   // loader.load('/models/poly.gltf',
 
-  loadModel(modelPath, position, scale) {
+  loadModel(modelPath, position, scale, rotation) {
     const loader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('/examples/jsm/libs/draco/');
@@ -73,20 +73,20 @@ class App extends Component {
       const model = gltf.scene;
       model.scale.set(scale.x, scale.y, scale.z);
       model.position.set(position.x, position.y, position.z);
+      model.rotation.set(rotation.x, rotation.y, rotation.z); // Aplica la rotación aquí
       scene.add(model);
     });
   }
-
+  
   componentDidMount() {
     this.init();
     this.animate();
     this.canvasRef.current.addEventListener("click", this.onCanvasClick);
-    this.canvasRef.current.addEventListener("wheel", this.onMouseWheel); // Zoom en la cámara
-
-
-    // Forma de añadir: UBICACIÓN ARCHIVO, new THREE.Vector3(UBICACIONES), new THREE.Vector3 (DIMENSIONES)
-    this.loadModel('/models/poly.gltf', new THREE.Vector3(0, 7.5, 0), new THREE.Vector3(10, 10, 10));
-    this.loadModel('/models/ortDesk.gltf', new THREE.Vector3(-5, 0.5, 0), new THREE.Vector3(1, 1, 1));
+    this.canvasRef.current.addEventListener("wheel", this.onMouseWheel);
+  
+    // Forma de añadir: UBICACIÓN ARCHIVO - UBICACIÓN EN ESCENA - TAMAÑO - ROTACIÓN
+    this.loadModel('/models/poly.gltf', new THREE.Vector3(0, 7.5, 0), new THREE.Vector3(10, 10, 10), new THREE.Vector3(0, 0, 0));
+    this.loadModel('/models/ortDesk.gltf', new THREE.Vector3(-15, 0, 8), new THREE.Vector3(2, 2, 2), new THREE.Vector3(0, Math.PI / 2, 0));
   }
   
   componentWillUnmount() {
@@ -163,15 +163,22 @@ class App extends Component {
     this.cube1 = this.createInteractiveTorus(4.5, 0.5, 7.5);
     this.cube1.name = "teleport";
     scene.add(this.cube1);
+
     const cube2 = this.createInteractiveTorus(5, 0.5, 2);
     cube2.name = "teleport";
     scene.add(cube2);
+    
     const cube3 = this.createInteractiveTorus(10, 0.5, -2);
     cube3.name = "teleport";
     scene.add(cube3);
+
     const cube4 = this.createInteractiveTorus(0, 0.5, 4);
     cube4.name = "teleport";
     scene.add(cube4);
+
+    const cube5 = this.createInteractiveTorus(-11, 0, 5);
+    cube5.name = "teleport";
+    scene.add(cube5);
 
     // Mover la cámara hacia el objeto presionado
     isDragging = false;
@@ -233,9 +240,15 @@ document.addEventListener("mousemove", function (event) {
     popup = new THREE.Mesh(geometrypopup, materialpopup);
     popup.castShadow = false;
     scene.add(popup);
-    popup.position.y = 5;
-    popup.position.x = 12;
-    popup.position.z = 5.5;
+    // popup.position.y = 5;
+    // popup.position.x = 12;
+    // popup.position.z = 5.5;
+
+    popup.position.y = 3.75;
+    popup.position.x = -15;
+    popup.position.z = 5;
+
+    // (-11, 0, 5)
   }
 
 
