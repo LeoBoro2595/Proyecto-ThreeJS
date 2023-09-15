@@ -93,6 +93,10 @@ body {
   overflow: auto;
 }
 
+.AppMenu > h1 {
+  margin-left: 5%;
+}
+
 .AppMenu > ol {
 
   font-size: 36px;

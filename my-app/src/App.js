@@ -7,8 +7,9 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // import axios from 'axios'
 
-let scene, camera, renderer, wall, popup;
-const cubes = [];
+let scene, camera, renderer, wall, popup, raycaster;
+const popups = [];
+const objectsWithTeleportID = [];
 const target = new THREE.Vector2();
 let isDragging
 let previousMousePosition
@@ -87,6 +88,13 @@ class App extends Component {
     // Forma de añadir: UBICACIÓN ARCHIVO - UBICACIÓN EN ESCENA - TAMAÑO - ROTACIÓN
     this.loadModel('/models/poly.gltf', new THREE.Vector3(0, 7.5, 0), new THREE.Vector3(10, 10, 10), new THREE.Vector3(0, 0, 0));
     this.loadModel('/models/ortDesk.gltf', new THREE.Vector3(-15, 0, 8), new THREE.Vector3(2, 2, 2), new THREE.Vector3(0, Math.PI / 2, 0));
+
+
+    // Instanciar popups
+    // this.createPopup(X, Y, Z, "TEXTO");
+    this.createPopup(-14, 3.75, 7, "Popup 1");
+    this.createPopup(15, 5, 3, "Popup 2");
+    this.createPopup(0, 0, -2, "Popup 3");
   }
   
   componentWillUnmount() {
@@ -98,7 +106,7 @@ class App extends Component {
     event.preventDefault();
     // Límite del zoom (Cuanto zoom se puede hacer en la escena)
     const minZoom = 0.75;
-    const maxZoom = 20;
+    const maxZoom = 2;
 
     const delta = event.deltaY * 0.001;
 
@@ -164,21 +172,21 @@ class App extends Component {
     this.cube1.name = "teleport";
     scene.add(this.cube1);
 
-    const cube2 = this.createInteractiveTorus(5, 0.5, 2);
-    cube2.name = "teleport";
-    scene.add(cube2);
+    this.cube2 = this.createInteractiveTorus(5, 0.5, 2);
+    this.cube2.name = "teleport";
+    scene.add(this.cube2);
     
-    const cube3 = this.createInteractiveTorus(10, 0.5, -2);
-    cube3.name = "teleport";
-    scene.add(cube3);
+    this.cube3 = this.createInteractiveTorus(10, 0.5, -2);
+    this.cube3.name = "teleport";
+    scene.add(this.cube3);
 
-    const cube4 = this.createInteractiveTorus(0, 0.5, 4);
-    cube4.name = "teleport";
-    scene.add(cube4);
+    this.cube4 = this.createInteractiveTorus(0, 0.5, 4);
+    this.cube4.name = "teleport";
+    scene.add(this.cube4);
 
-    const cube5 = this.createInteractiveTorus(-11, 0, 5);
-    cube5.name = "teleport";
-    scene.add(cube5);
+    this.cube5 = this.createInteractiveTorus(-11, 0, 5);
+    this.cube5.name = "teleport";
+    scene.add(this.cube5);
 
     // Mover la cámara hacia el objeto presionado
     isDragging = false;
@@ -231,28 +239,17 @@ document.addEventListener("mousemove", function (event) {
     scene.add(wall);
     wall.position.z = -5;
     wall.position.y = 2.5;
-
-
-
-    // Añadir la geometría del popup
-    var geometrypopup = new THREE.BoxGeometry(1, 1, 1);
-    var materialpopup = new THREE.MeshPhongMaterial({ wireframe: true, emissive: 0xffffff });
-    popup = new THREE.Mesh(geometrypopup, materialpopup);
-    popup.castShadow = false;
-    scene.add(popup);
-    // popup.position.y = 5;
-    // popup.position.x = 12;
-    // popup.position.z = 5.5;
-
-    popup.position.y = 3.75;
-    popup.position.x = -15;
-    popup.position.z = 5;
-
-    // (-11, 0, 5)
   }
-
-
-
+  
+  // Añadir los popups
+  createPopup(x, y, z, content) {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshPhongMaterial({ color: 0xff0000, wireframe: true });
+    popup = new THREE.Mesh(geometry, material);
+    popup.position.set(x, y, z);
+    scene.add(popup);
+    popups.push({ mesh: popup, content });
+  }
 
 
 createInteractiveTorus(x, y, z) {
@@ -290,20 +287,28 @@ createInteractiveTorus(x, y, z) {
   // Detectar si se clickeó el canvas para mostrar el popup con la información de una obra
   onCanvasClick(event) {
     const rect = this.canvasRef.current.getBoundingClientRect();
-    const mouse = {
-      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
-    };
-  
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-  
-    const intersects = raycaster.intersectObject(popup);
-  
-    if (intersects.length > 0) {
-      this.showPopup();
-    } else {
-      const objectsWithTeleportID = [];
+  const mouse = {
+    x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  };
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, camera);
+
+  // Verificar si el rayo intersecta con algún popup
+  const intersects = raycaster.intersectObjects(popups.map((popup) => popup.mesh));
+
+  if (intersects.length > 0) {
+    // Hiciste clic en un popup, muestra el contenido del popup
+    const popup = popups.find((p) => p.mesh === intersects[0].object);
+    if (popup) {
+      this.showPopup(popup.content);
+    }
+  } else {
+    // Hiciste clic en otro lugar de la escena, cierra el popup si está abierto
+    if (this.state.isPopupVisible) {
+      this.closePopup();
+    }
   
       // Recorre todos los objetos en la escena y encuentra los que tienen el ID "teleport"
       scene.traverse((obj) => {
@@ -364,6 +369,23 @@ createInteractiveTorus(x, y, z) {
     camera.lookAt(position);
   }
 
+  nCanvasClick(event) {
+    const rect = this.canvasRef.current.getBoundingClientRect();
+    const mouse = {
+      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+    };
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(popups.map((popup) => popup.mesh));
+
+    if (intersects.length > 0) {
+      const popup = popups.find((p) => p.mesh === intersects[0].object);
+      if (popup) {
+        this.showPopup(popup.content);
+      }
+    }
+  };
 
   // Mostrar el popup
   showPopup() {
