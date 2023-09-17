@@ -92,7 +92,7 @@ class App extends Component {
 
     // Instanciar popups
     // this.createPopup(X, Y, Z, "TEXTO");
-    this.createPopup(-14, 3.75, 7, "Popup 1");
+    this.createPopup(-14, 3.75, 7, "Messi");
     this.createPopup(15, 5, 3, "Popup 2");
     this.createPopup(0, 0, -2, "Popup 3");
   }
@@ -193,7 +193,7 @@ class App extends Component {
     previousMousePosition = { x: 0, y: 0 };
 
 // Agregar un listener de eventos para el ratón
-document.addEventListener("mousedown", function (event) {
+document.addEventListener("mousedown", (event) => {
   isDragging = true;
   previousMousePosition = {
     x: event.clientX,
@@ -201,36 +201,52 @@ document.addEventListener("mousedown", function (event) {
   };
 });
 
-document.addEventListener("mouseup", function () {
+document.addEventListener("mouseup", () => {
   isDragging = false;
 });
 
-document.addEventListener("mousemove", function (event) {
-  if (!isDragging) return;
-
-  const deltaMove = {
-    x: event.clientX - previousMousePosition.x,
-    y: event.clientY - previousMousePosition.y,
+if (this.canvasRef.current) {
+document.addEventListener("mousemove", (event) => {
+  const rect = this.canvasRef.current.getBoundingClientRect();
+  const mouse = {
+    x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
   };
+
+  // Verifica si el ratón está dentro de la escena antes de actualizar la cámara
+  if (mouse.x >= -1 && mouse.x <= 1 && mouse.y >= -1 && mouse.y <= 1) {
+    if (!isDragging) return;
+
+    const deltaMove = {
+      x: event.clientX - previousMousePosition.x,
+      y: event.clientY - previousMousePosition.y,
+    };
 
   // Ajustar la rotación de la cámara basada en el movimiento del mouse
   camera.rotation.order = "YXZ";
   const sensitivity = 0.002;
-  camera.rotation.y += deltaMove.x * sensitivity;
-  camera.rotation.x += deltaMove.y * sensitivity;
 
   // Limitar la rotación vertical
-  const maxVerticalAngle = Math.PI / 2;
+  const newRotationX = camera.rotation.x + deltaMove.y * sensitivity;
   camera.rotation.x = Math.max(
-    -maxVerticalAngle,
-    Math.min(maxVerticalAngle, camera.rotation.x)
+    this.minRotationX,
+    Math.min(this.maxRotationX, newRotationX)
   );
+
+  const newRotationY = camera.rotation.y + deltaMove.x * sensitivity;
+  camera.rotation.y = Math.max(
+    this.minRotationY,
+    Math.min(this.maxRotationY, newRotationY)
+  );
+
 
   previousMousePosition = {
     x: event.clientX,
     y: event.clientY,
   };
+}
 });
+}
 
     // Añadir pared (test)
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
@@ -242,19 +258,19 @@ document.addEventListener("mousemove", function (event) {
   }
   
   // Añadir los popups
-  createPopup(x, y, z, content) {
+  createPopup(x, y, z, id) {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshPhongMaterial({ color: 0xff0000, wireframe: true });
     popup = new THREE.Mesh(geometry, material);
     popup.position.set(x, y, z);
     scene.add(popup);
-    popups.push({ mesh: popup, content });
+    popups.push({ mesh: popup, id });
   }
 
 
 createInteractiveTorus(x, y, z) {
   const torusGeometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
-  const torusMaterial = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100, });
+  const torusMaterial = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff });
   const torus = new THREE.Mesh(torusGeometry, torusMaterial);
   torus.rotation.x = Math.PI / 2;
 
@@ -302,7 +318,8 @@ createInteractiveTorus(x, y, z) {
     // Hiciste clic en un popup, muestra el contenido del popup
     const popup = popups.find((p) => p.mesh === intersects[0].object);
     if (popup) {
-      this.showPopup(popup.content);
+      console.log("ID del popup clickeado:", popup.id);
+      this.showPopup(popup.id);
     }
   } else {
     // Hiciste clic en otro lugar de la escena, cierra el popup si está abierto
@@ -369,24 +386,6 @@ createInteractiveTorus(x, y, z) {
     camera.lookAt(position);
   }
 
-  nCanvasClick(event) {
-    const rect = this.canvasRef.current.getBoundingClientRect();
-    const mouse = {
-      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
-    };
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(popups.map((popup) => popup.mesh));
-
-    if (intersects.length > 0) {
-      const popup = popups.find((p) => p.mesh === intersects[0].object);
-      if (popup) {
-        this.showPopup(popup.content);
-      }
-    }
-  };
-
   // Mostrar el popup
   showPopup() {
     const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
@@ -423,12 +422,6 @@ createInteractiveTorus(x, y, z) {
     }
   }
   
-     // id = this.getObjectById();
-      // axios.post("direccion", {
-      //   id: id
-      // })
-
-
 
   render() {
     return (
@@ -446,16 +439,16 @@ createInteractiveTorus(x, y, z) {
     <h1>Menu de pisos</h1>
     <ol>
       <li>
-        <a href="#" class="custom-text-1"> ... </a>
-        <p class="classText">Texto</p>
+        <a href="#" className="custom-text-1"> ... </a>
+        <p className="classText">Texto</p>
       </li>
       <li>
-        <a href="#" class="custom-text-2" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a>
-        <p class="classText">Texto</p>
+        <a href="#" className="custom-text-2" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a>
+        <p className="classText">Texto</p>
       </li>
       <li>
-        <a href="#" class="custom-text-3"> ... </a>
-        <p class="classText">Texto</p>
+        <a href="#" className="custom-text-3"> ... </a>
+        <p className="classText">Texto</p>
       </li>
     </ol>
   </div>
@@ -468,8 +461,15 @@ createInteractiveTorus(x, y, z) {
 
 
           <h1 id="UItitle">Title</h1>
-          {/* <video controls src="Humpty Dumpty _ Kids Songs _ Super Simple Songs.mp4" id="videoDiv"></video> */}
-          <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
+          <iframe
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
 
           <p id="UItext">
             Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
