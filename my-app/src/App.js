@@ -11,8 +11,9 @@ let scene, camera, renderer, wall, popup, raycaster;
 const popups = [];
 const objectsWithTeleportID = [];
 const target = new THREE.Vector2();
-let isDragging
-let previousMousePosition
+let isDragging;
+let previousMousePosition;
+const info = "";
 
 class App extends Component {
   constructor(props) {
@@ -45,6 +46,7 @@ class App extends Component {
       isMenuVisible: true,
       isPopupVisible: false,
       isCloseMenuButtonVisible: false,
+      isDragging: false,
     };
 
     this.cube = null;
@@ -83,6 +85,12 @@ class App extends Component {
     this.init();
     this.animate();
     this.canvasRef.current.addEventListener("click", this.onCanvasClick);
+
+    // Agrega los event listeners solo cuando estás dentro del canvas
+    this.canvasRef.current.addEventListener("mousedown", this.onMouseDown);
+    this.canvasRef.current.addEventListener("mouseup", this.onMouseUp);
+    this.canvasRef.current.addEventListener("mousemove", this.onMouseMove);
+
     this.canvasRef.current.addEventListener("wheel", this.onMouseWheel);
   
     // Forma de añadir: UBICACIÓN ARCHIVO - UBICACIÓN EN ESCENA - TAMAÑO - ROTACIÓN
@@ -91,15 +99,20 @@ class App extends Component {
 
 
     // Instanciar popups
-    // this.createPopup(X, Y, Z, "TEXTO");
-    this.createPopup(-14, 3.75, 7, "Popup 1");
+    // this.createPopup(X, Y, Z, "ID");
+    this.createPopup(-14, 3.75, 7, "Messi");
     this.createPopup(15, 5, 3, "Popup 2");
-    this.createPopup(0, 0, -2, "Popup 3");
+    this.createPopup(0, 0, -3, "Popup 3");
   }
   
   componentWillUnmount() {
     this.canvasRef.current.removeEventListener("click", this.onCanvasClick);
+    this.canvasRef.current.removeEventListener("mousedown", this.onMouseDown);
+    this.canvasRef.current.removeEventListener("mouseup", this.onMouseUp);
+    this.canvasRef.current.removeEventListener("mousemove", this.onMouseMove);
   }
+
+  
 
   // Hacer zoom
   onMouseWheel(event) {
@@ -133,7 +146,38 @@ class App extends Component {
     target.y = ((centerY / window.innerHeight) * 2 - 1) * 0.5;
   }
 
+  onMouseDown = () => {
+    this.setState({ isDragging: true });
+  };
 
+  // Nuevo evento para indicar que se ha soltado el mouse
+  onMouseUp = () => {
+    this.setState({ isDragging: false });
+  };
+
+  // Nuevo evento para mover la cámara solo cuando se está arrastrando el mouse
+  onMouseMove = (event) => {
+    const { isDragging } = this.state;
+    if (isDragging) {
+      const deltaMove = {
+        x: event.movementX,
+        y: event.movementY,
+      };
+
+      // Ajusta la rotación de la cámara basada en el movimiento del mouse
+      camera.rotation.order = "YXZ";
+      const sensitivity = 0.002;
+      camera.rotation.y += deltaMove.x * sensitivity;
+      camera.rotation.x += deltaMove.y * sensitivity;
+
+      // Limita la rotación vertical
+      const maxVerticalAngle = Math.PI / 2;
+      camera.rotation.x = Math.max(
+        -maxVerticalAngle,
+        Math.min(maxVerticalAngle, camera.rotation.x)
+      );
+    }
+  };
 
   init() {
     // Crear escena
@@ -192,45 +236,6 @@ class App extends Component {
     isDragging = false;
     previousMousePosition = { x: 0, y: 0 };
 
-// Agregar un listener de eventos para el ratón
-document.addEventListener("mousedown", function (event) {
-  isDragging = true;
-  previousMousePosition = {
-    x: event.clientX,
-    y: event.clientY,
-  };
-});
-
-document.addEventListener("mouseup", function () {
-  isDragging = false;
-});
-
-document.addEventListener("mousemove", function (event) {
-  if (!isDragging) return;
-
-  const deltaMove = {
-    x: event.clientX - previousMousePosition.x,
-    y: event.clientY - previousMousePosition.y,
-  };
-
-  // Ajustar la rotación de la cámara basada en el movimiento del mouse
-  camera.rotation.order = "YXZ";
-  const sensitivity = 0.002;
-  camera.rotation.y += deltaMove.x * sensitivity;
-  camera.rotation.x += deltaMove.y * sensitivity;
-
-  // Limitar la rotación vertical
-  const maxVerticalAngle = Math.PI / 2;
-  camera.rotation.x = Math.max(
-    -maxVerticalAngle,
-    Math.min(maxVerticalAngle, camera.rotation.x)
-  );
-
-  previousMousePosition = {
-    x: event.clientX,
-    y: event.clientY,
-  };
-});
 
     // Añadir pared (test)
     var wallgeometry = new THREE.BoxGeometry(10, 5, 0.1);
@@ -242,34 +247,34 @@ document.addEventListener("mousemove", function (event) {
   }
   
   // Añadir los popups
-  createPopup(x, y, z, content) {
+  createPopup(x, y, z, id) {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshPhongMaterial({ color: 0xff0000, wireframe: true });
     popup = new THREE.Mesh(geometry, material);
     popup.position.set(x, y, z);
     scene.add(popup);
-    popups.push({ mesh: popup, content });
+    popups.push({ mesh: popup, id });
   }
 
 
-createInteractiveTorus(x, y, z) {
-  const torusGeometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
-  const torusMaterial = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff, shininess: 100, });
-  const torus = new THREE.Mesh(torusGeometry, torusMaterial);
-  torus.rotation.x = Math.PI / 2;
+  createInteractiveTorus(x, y, z) {
+    const torusGeometry = new THREE.TorusGeometry(0.5, 0.1, 2, 64);
+    const torusMaterial = new THREE.MeshStandardMaterial({ color: 0xfffff, wireframe: false, emissive: 0xffffff });
+    const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+    torus.rotation.x = Math.PI / 2;
 
-  // Collider encima de la geometría del TP para poder tener un mayor radio para clickear y teletransportarse
-  const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const boxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-  const interactiveMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    // Collider encima de la geometría del TP para poder tener un mayor radio para clickear y teletransportarse
+    const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const boxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+    const interactiveMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 
-  const interactiveTorus = new THREE.Group();
-  interactiveTorus.add(torus);
-  interactiveTorus.add(interactiveMesh);
+    const interactiveTorus = new THREE.Group();
+    interactiveTorus.add(torus);
+    interactiveTorus.add(interactiveMesh);
 
-  interactiveTorus.position.set(x, y, z);
-  return interactiveTorus;
-}
+    interactiveTorus.position.set(x, y, z);
+    return interactiveTorus;
+  }
 
   animate() {
     if (!this.state.isPopupVisible) {
@@ -299,13 +304,19 @@ createInteractiveTorus(x, y, z) {
   const intersects = raycaster.intersectObjects(popups.map((popup) => popup.mesh));
 
   if (intersects.length > 0) {
-    // Hiciste clic en un popup, muestra el contenido del popup
+    // Detectar un click en un popup y mostrar el contenido del popup
     const popup = popups.find((p) => p.mesh === intersects[0].object);
     if (popup) {
-      this.showPopup(popup.content);
+      // axios.post(`${dir_url}/infoobras` , {
+      //   id:popup.id
+      // }).then((res) => {
+      //   info = res.data
+      // })
+      this.showPopup(popup.id);
+      console.log("ID del popup clickeado:", popup.id);
     }
   } else {
-    // Hiciste clic en otro lugar de la escena, cierra el popup si está abierto
+    // Detectar si se hizo click en otro lugar de la escena y cerrar el popup si está abierto
     if (this.state.isPopupVisible) {
       this.closePopup();
     }
@@ -369,24 +380,6 @@ createInteractiveTorus(x, y, z) {
     camera.lookAt(position);
   }
 
-  nCanvasClick(event) {
-    const rect = this.canvasRef.current.getBoundingClientRect();
-    const mouse = {
-      x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
-    };
-
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(popups.map((popup) => popup.mesh));
-
-    if (intersects.length > 0) {
-      const popup = popups.find((p) => p.mesh === intersects[0].object);
-      if (popup) {
-        this.showPopup(popup.content);
-      }
-    }
-  };
-
   // Mostrar el popup
   showPopup() {
     const popup = this.popupRef.current; //Añadir popup a la escena 3D (DOM)
@@ -422,20 +415,12 @@ createInteractiveTorus(x, y, z) {
       }, 500);
     }
   }
-  
-     // id = this.getObjectById();
-      // axios.post("direccion", {
-      //   id: id
-      // })
-
-
 
   render() {
     return (
       <div>
         <div id="darkOverlay" className={this.state.isTeleporting ? 'dark-overlay active' : 'dark-overlay'}></div>
 
-        <canvas ref={this.canvasRef} className="App" />
     <canvas ref={this.canvasRef} className="App" />
       {this.state.isCloseMenuButtonVisible && (
         <button className="btnCloseMenu" onClick={this.openMenu}><i className="fa-solid fa-question"></i></button>
@@ -446,30 +431,33 @@ createInteractiveTorus(x, y, z) {
     <h1>Menu de pisos</h1>
     <ol>
       <li>
-        <a href="#" class="custom-text-1"> ... </a>
-        <p class="classText">Texto</p>
+        <a href="#" className="custom-text-1"> ... <p className="classText">Texto</p> </a>
       </li>
       <li>
-        <a href="#" class="custom-text-2" id="linkTP" onClick={this.onLinkClick}>Teletransportarse</a>
-        <p class="classText">Texto</p>
+        <a href="#" className="custom-text-2" id="linkTP" onClick={this.onLinkClick}>Teletransportarse <p className="classText">Texto</p> </a>
       </li>
       <li>
-        <a href="#" class="custom-text-3"> ... </a>
-        <p class="classText">Texto</p>
+        <a href="#" className="custom-text-3"> ... <p className="classText">Texto</p> </a>
       </li>
     </ol>
   </div>
 )}
 
 
-        <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>  {/* Hace referencia al elemento "popup" para mostrarlo en el HTML */}
-          <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i> {/* Cerrar video mediante la referencia "this.closePopup" */}
+        <div id="popup" className="popup" ref={this.popupRef} style={{ display: "none", position: "absolute", top: 0, left: 0 }}>
+          <i className="fa-regular fa-eye-slash" id="eyeClose" onClick={this.closePopup}></i>
 
 
 
           <h1 id="UItitle">Title</h1>
-          {/* <video controls src="Humpty Dumpty _ Kids Songs _ Super Simple Songs.mp4" id="videoDiv"></video> */}
-          <video controls src="https://www.youtube.com/watch?v=dQw4w9WgXcQ" id="videoDiv"></video>
+
+          <iframe
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          ></iframe>
 
           <p id="UItext">
             Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus voluptas,
@@ -488,11 +476,6 @@ createInteractiveTorus(x, y, z) {
             quisquam nam deleniti voluptatem explicabo exercitationem quas laudantium fuga accusamus officia architecto eligendi optio repellat labore hic inventore.
             Distinctio, labore.
           </p>
-          {/* </div> */}
-
-          {/* <audio controls src="#"></audio> */}
-
-          {/* <p className="creditosProyecto">Text</p> */}
 
         </div>
 
