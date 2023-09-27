@@ -52,7 +52,21 @@ class App extends Component {
     this.cube = null;
 
     this.teleportProgress = 0;
-    const teleportSpeed = 0.02;
+
+    this.teleportDestinations = {
+      teleportLink1: {
+        position: new THREE.Vector3(-5, 0, -5),
+        rotation: new THREE.Euler(0, Math.PI / 2, 0),
+      },
+      teleportLink2: {
+        position: new THREE.Vector3(5, 0, 5),
+        rotation: new THREE.Euler(0, -Math.PI / 2, 0),
+      },
+      teleportLink3: {
+        position: new THREE.Vector3(-11, 0, 5),
+        rotation: new THREE.Euler(0, -Math.PI / -2, 0),
+      },
+    };
   }
 
 
@@ -423,26 +437,40 @@ onTouchMove = (event) => {
   }
 
   // Detectar si se clickeó sobre el menu para transportarse por la escena (Diferentes pisos)
-  onLinkClick(event) {
-    if (event.target.id === 'linkTP') {
-      event.preventDefault();
-
+  
+  teleportTo(destination) {
+    const destInfo = this.teleportDestinations[destination];
+  
+    if (destInfo) {
+      const { position, rotation } = destInfo;
+  
       this.setState({ isTeleporting: true });
-
+  
       setTimeout(() => {
-        const position = this.cube1.position;
         const cameraY = camera.position.y;
         camera.position.copy(position);
         camera.position.y = cameraY;
-        camera.lookAt(position);
-
+        camera.rotation.copy(rotation);
+  
         setTimeout(() => {
-          // Desactiva la pantalla negra
           this.setState({ isTeleporting: false });
-        }, 1000); // Tiempo de animación de teletransportación
+        }, 1000);
       }, 500);
     }
   }
+  
+
+  onLinkClick(event) {
+    event.preventDefault();
+    const destination = event.target.getAttribute('data-destination');
+  
+    if (destination) {
+      this.teleportTo(destination);
+    } else {
+      console.log('No se ha especificado ningún destino para el enlace.');
+    }
+  }
+  
 
   render() {
     return (
@@ -459,13 +487,13 @@ onTouchMove = (event) => {
     <h1>Menu de pisos</h1>
     <ol>
       <li>
-        <a href="#" className="custom-text-1"> ... <p className="classText">Texto</p> </a>
+      <a href="#" className="custom-text-1" data-destination="teleportLink1" onClick={this.onLinkClick}> ... <p className="classText">Texto</p> </a>
       </li>
       <li>
-        <a href="#" className="custom-text-2" id="linkTP" onClick={this.onLinkClick}>Teletransportarse <p className="classText">Texto</p> </a>
+        <a href="#" className="custom-text-2" data-destination="teleportLink2" onClick={this.onLinkClick}> ... <p className="classText">Texto</p> </a>
       </li>
       <li>
-        <a href="#" className="custom-text-3"> ... <p className="classText">Texto</p> </a>
+      <a href="#" className="custom-text-3" data-destination="teleportLink3" onClick={this.onLinkClick}> ... <p className="classText">Texto</p> </a>
       </li>
     </ol>
   </div>
