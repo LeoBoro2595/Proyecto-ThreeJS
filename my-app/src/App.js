@@ -76,7 +76,7 @@ class App extends Component {
       const model = gltf.scene;
       model.scale.set(scale.x, scale.y, scale.z);
       model.position.set(position.x, position.y, position.z);
-      model.rotation.set(rotation.x, rotation.y, rotation.z); // Aplica la rotación aquí
+      model.rotation.set(rotation.x, rotation.y, rotation.z);
       scene.add(model);
     });
   }
@@ -90,12 +90,17 @@ class App extends Component {
     this.canvasRef.current.addEventListener("mousedown", this.onMouseDown);
     this.canvasRef.current.addEventListener("mouseup", this.onMouseUp);
     this.canvasRef.current.addEventListener("mousemove", this.onMouseMove);
-
     this.canvasRef.current.addEventListener("wheel", this.onMouseWheel);
+
+    this.canvasRef.current.addEventListener("touchstart", this.onTouchStart);
+    this.canvasRef.current.addEventListener("touchend", this.onTouchEnd);
+    this.canvasRef.current.addEventListener("touchmove", this.onTouchMove);
+
   
-    // Forma de añadir: UBICACIÓN ARCHIVO - UBICACIÓN EN ESCENA - TAMAÑO - ROTACIÓN
+    // Forma de añadir: UBICACIÓN ARCHIVO - UBICACIÓN EN ESCENA - TAMAÑO - ROTACIÓN (X, Y, Z)
     this.loadModel('/models/poly.gltf', new THREE.Vector3(0, 7.5, 0), new THREE.Vector3(10, 10, 10), new THREE.Vector3(0, 0, 0));
     this.loadModel('/models/ortDesk.gltf', new THREE.Vector3(-15, 0, 8), new THREE.Vector3(2, 2, 2), new THREE.Vector3(0, Math.PI / 2, 0));
+    this.loadModel('/models/DiseñoPopup.gltf', new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, 1, 2), new THREE.Vector3(0, 0, -Math.PI / 2));
 
 
     // Instanciar popups
@@ -110,9 +115,35 @@ class App extends Component {
     this.canvasRef.current.removeEventListener("mousedown", this.onMouseDown);
     this.canvasRef.current.removeEventListener("mouseup", this.onMouseUp);
     this.canvasRef.current.removeEventListener("mousemove", this.onMouseMove);
+    this.canvasRef.current.removeEventListener("wheel", this.onMouseWheel);
+
+    this.canvasRef.current.removeEventListener("touchstart", this.onTouchStart);
+    this.canvasRef.current.removeEventListener("touchend", this.onTouchEnd);
+    this.canvasRef.current.removeEventListener("touchmove", this.onTouchMove);
   }
 
-  
+  onTouchStart = (event) => {
+  if (event.touches.length === 1) {
+    // Solo si hay un dedo en la pantalla
+    isDragging = true;
+    const touch = event.touches[0];
+    previousMousePosition = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  }
+};
+
+onTouchEnd = () => {
+  isDragging = false;
+};
+
+onTouchMove = (event) => {
+  if (isDragging && event.touches.length === 1) {
+    const touch = event.touches[0];
+  }
+};
+
 
   // Hacer zoom
   onMouseWheel(event) {
@@ -150,7 +181,6 @@ class App extends Component {
     this.setState({ isDragging: true });
   };
 
-  // Nuevo evento para indicar que se ha soltado el mouse
   onMouseUp = () => {
     this.setState({ isDragging: false });
   };
@@ -266,6 +296,7 @@ class App extends Component {
     // Collider encima de la geometría del TP para poder tener un mayor radio para clickear y teletransportarse
     const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
     const boxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+    // const boxMaterial = new THREE.MeshBasicMaterial({ transparent: false, opacity: 50 });
     const interactiveMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 
     const interactiveTorus = new THREE.Group();
@@ -277,10 +308,7 @@ class App extends Component {
   }
 
   animate() {
-    if (!this.state.isPopupVisible) {
-      // Suavizar el movimiento de la cámara
-      const lerpAmount = 0.5; // Suavidad del movimiento
-  
+    if (!this.state.isPopupVisible) {  
       requestAnimationFrame(this.animate);
       renderer.render(scene, camera);
     } else {
@@ -332,7 +360,7 @@ class App extends Component {
   
       if (teleportIntersects.length > 0) {
         const targetPosition = teleportIntersects[0].point;
-        const targetRotation = new THREE.Euler(0, camera.rotation.y, 0); // Mantener la rotación actual en el eje Y
+        const targetRotation = new THREE.Euler(0, camera.rotation.y, 0);
   
         // Guarda la posición y rotación actual de la cámara
         const startPosition = camera.position.clone();
